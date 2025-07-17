@@ -59,16 +59,16 @@ dotnet restore
 dotnet build
 
 # Run the application
-dotnet run
+dotnet run --project TaskManager.CLI
 ```
 
 ### Single File Distribution
 The project is configured to build as a single executable file:
 ```bash
 # Build for release
-dotnet publish -c Release
+dotnet publish TaskManager.CLI -c Release
 
-# The executable will be in bin/Release/net8.0-windows/
+# The executable will be in TaskManager.CLI/bin/Release/net80indows/
 ```
 
 ## 🎮 Usage
@@ -76,7 +76,7 @@ dotnet publish -c Release
 ### Interactive Mode
 Run the application without arguments to enter interactive mode:
 ```bash
-TaskManagerCLI.exe
+TaskManager.CLI.exe
 ```
 
 ### Single Command Mode
@@ -94,7 +94,7 @@ TaskManagerCLI.exe "!stats"
 |---------|-------------|---------|
 | `!task <description>` | Add new task(s) (comma-separated) | `!task Review code, Write tests` |
 | `!edit <id> <description>` | Edit task description | `!edit 1 Updated task description` |
-| `!done <id>` | Mark task as completed | `!done 1` |
+| `!done <id>` | Mark task as completed | `!done1` |
 | `!delete <id>` | Delete task | `!delete 1` |
 
 ### 🎯 Focus & Break Management
@@ -171,21 +171,26 @@ The application uses dependency injection with the following default configurati
 
 ```
 TaskManagerCLI/
-├── Commands/                 # Command pattern implementation
-│   ├── Implementations/     # Individual command classes
-│   ├── ICommand.cs         # Command interface
-│   ├── ICommandFactory.cs  # Factory interface
-│   └── CommandFactory.cs   # Command factory
-├── Models/
-│   └── Models.cs           # Data models and enums
-├── Repositories/
-│   ├── ITaskRepository.cs  # Repository interface
-│   └── ExcelTaskRepository.cs # Excel-based implementation
-├── Services/               # Business logic services
-├── Utilities/
-│   └── ConsoleHelper.cs    # Console I/O utilities
-├── Program.cs              # Application entry point
-└── TaskManagerCLI.csproj   # Project configuration
+├── TaskManager.CLI/           # Main project directory
+│   ├── Commands/             # Command pattern implementation
+│   │   ├── Implementations/ # Individual command classes
+│   │   ├── ICommand.cs     # Command interface
+│   │   ├── ICommandFactory.cs # Factory interface
+│   │   └── CommandFactory.cs  # Command factory
+│   ├── Models/
+│   │   └── Models.cs        # Data models and enums
+│   ├── Repositories/
+│   │   ├── ITaskRepository.cs # Repository interface
+│   │   └── ExcelTaskRepository.cs # Excel-based implementation
+│   ├── Services/            # Business logic services
+│   ├── Utilities/
+│   │   └── ConsoleHelper.cs # Console I/O utilities
+│   ├── Program.cs           # Application entry point
+│   └── TaskManager.CLI.csproj # Project configuration
+├── TaskManager.sln          # Solution file
+├── README.md               # This file
+├── LICENSE                 # License information
+└── .gitignore             # Git ignore rules
 ```
 
 ## 🚀 Quick Start Guide
@@ -215,17 +220,39 @@ TaskManagerCLI/
    !stats
    ```
 
-6. **End your work day**:
+6*End your work day**:
    ```
    !endday
    ```
 
 ## 📊 Data Storage
 
-Tasks and session data are stored in Excel files:
-- **Tasks**: `tasks.xlsx` - Contains task list with status and timestamps
-- **Sessions**: `sessions.xlsx` - Contains focus and break session logs
-- **Statistics**: `statistics.xlsx` - Contains daily productivity metrics
+All data is stored in a single Excel file: **`tasks.xlsx`** (located in your Documents/TaskManager folder). This file contains the following six sheets:
+
+1. **Tasks**
+   - Stores the main task list, including task IDs, descriptions, status, timestamps (created, completed, paused), focus time, and other metadata.
+
+2. **Sessions**
+   - Logs all focus, break, pause, and application sessions with start/end times, session type, associated task IDs, and notes.
+
+3. **WorkDays**
+   - Tracks each work day, including start/end times, planned duration, active status, and a list of session logs for that day.
+
+4. **Statistics**
+   - Contains daily productivity metrics such as total focus time, break time, number of completed sessions, and productivity scores.
+
+5. **Backups**
+   - Maintains a log of backup operations, including backup timestamps and file paths for recovery purposes.
+
+6. **Metadata**
+   - Stores application-level metadata, version info, and configuration settings to ensure compatibility and smooth upgrades.
+
+**Backup System:**  
+- The application automatically creates timestamped backups of `tasks.xlsx` when you end a work day, complete focus sessions, or request a manual backup.  
+- Backups are stored in the `Archive` subfolder for easy recovery.
+
+**Note:**  
+- You can open and analyze `tasks.xlsx` in Excel for advanced filtering, reporting, or sharing your productivity data.
 
 ## 🔄 Backup System
 
@@ -250,6 +277,19 @@ The application includes comprehensive error handling:
 - Invalid commands show helpful error messages
 - Data corruption triggers automatic recovery
 - Network issues are handled gracefully
+
+## 📝 License
+
+This project is licensed under the [MIT License](LICENSE).
+
+You are free to use, modify, and distribute this software for personal or commercial purposes, provided that the original copyright and license notice are included in all copies or substantial portions of the software.
+
+**Summary:**
+- ✅ Free for personal and commercial use
+- ✅ Modification and redistribution allowed
+- ❌ No warranty is provided
+
+See the [LICENSE](LICENSE) file for the full license text.
 
 ---
 
