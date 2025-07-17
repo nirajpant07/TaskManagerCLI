@@ -38,7 +38,7 @@ namespace TaskManagerCLI.Services
             // Add session log
             await _repository.AddSessionLogAsync(new SessionLog
             {
-                Date = DateTime.Today,
+                Date = DateTime.UtcNow.Date,
                 StartTime = _currentSessionStart.Value,
                 Type = SessionType.Focus,
                 TaskId = task.Id,
@@ -73,7 +73,7 @@ namespace TaskManagerCLI.Services
             // Add session log
             await _repository.AddSessionLogAsync(new SessionLog
             {
-                Date = DateTime.Today,
+                Date = DateTime.UtcNow.Date,
                 StartTime = _currentSessionStart.Value,
                 Type = SessionType.Break,
                 Notes = "Break session started"
@@ -174,7 +174,7 @@ namespace TaskManagerCLI.Services
                 // Add pause log
                 await _repository.AddSessionLogAsync(new SessionLog
                 {
-                    Date = DateTime.Today,
+                    Date = DateTime.UtcNow.Date,
                     StartTime = DateTime.UtcNow,
                     Type = SessionType.Pause,
                     TaskId = _currentTask.Id,

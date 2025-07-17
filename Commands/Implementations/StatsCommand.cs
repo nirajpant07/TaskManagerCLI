@@ -17,7 +17,7 @@ namespace TaskManagerCLI.Commands.Implementations
 
         public async Task<string> ExecuteAsync(string[] parameters)
         {
-            var stats = await _repository.GetDayStatisticsAsync(DateTime.Today);
+            var stats = await _repository.GetDayStatisticsAsync(DateTime.UtcNow.Date);
             var session = await _repository.GetTodaySessionAsync();
             var tasks = await _repository.GetAllTasksAsync();
 
@@ -30,7 +30,7 @@ namespace TaskManagerCLI.Commands.Implementations
                 ? stats.TotalFocusTime.TotalMinutes / stats.TotalBreakTime.TotalMinutes
                 : 0;
 
-            return $"📊 Detailed Statistics ({DateTime.Today:yyyy-MM-dd}):\n\n" +
+            return $"📊 Detailed Statistics ({DateTime.UtcNow.Date:yyyy-MM-dd}):\n\n" +
                    $"⏱️ Time Tracking:\n" +
                    $"   🎯 Focus Time: {stats.TotalFocusTime:hh\\:mm\\:ss}\n" +
                    $"   ☕ Break Time: {stats.TotalBreakTime:hh\\:mm\\:ss}\n" +

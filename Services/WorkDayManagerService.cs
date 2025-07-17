@@ -77,7 +77,7 @@ namespace TaskManagerCLI.Services
             await _backupService.CreateDailyBackupAsync();
 
             // Show end of day summary
-            var stats = await _repository.GetDayStatisticsAsync(DateTime.Today);
+            var stats = await _repository.GetDayStatisticsAsync(DateTime.UtcNow.Date);
             await _soundService.PlayWorkDayEndAsync();
             await _notificationService.ShowWorkDayEndAsync(stats);
 

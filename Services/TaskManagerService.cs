@@ -1,4 +1,5 @@
 ﻿using TaskManagerCLI.Commands;
+using TaskManagerCLI.Models;
 using TaskManagerCLI.Repositories;
 using TaskManagerCLI.Services;
 using System;
@@ -13,6 +14,8 @@ namespace TaskManagerCLI.Services
         private readonly ICommandFactory _commandFactory;
         private readonly ConsoleHelper _console;
         private readonly ISoundService _soundService;
+        private bool _applicationStarted = false;
+        private DateTime? _applicationStartTime;
 
         public TaskManagerService(ITaskRepository repository, ICommandFactory commandFactory,
                           ConsoleHelper console, ISoundService soundService)
@@ -25,6 +28,8 @@ namespace TaskManagerCLI.Services
 
         public async Task RunInteractiveAsync()
         {
+            await LogApplicationStartAsync();
+
             Console.ForegroundColor = ConsoleColor.Cyan;
             Console.WriteLine(@"
 ╔══════════════════════════════════════════════════════════════╗
@@ -116,6 +121,39 @@ namespace TaskManagerCLI.Services
             {
                 await _soundService.PlayErrorSoundAsync();
                 throw new Exception($"Command execution failed: {ex.Message}", ex);
+            }
+        }
+
+        public async Task LogApplicationStartAsync()
+        {
+            _applicationStarted = true;
+            _applicationStartTime = DateTime.UtcNow;
+
+            await _repository.AddSessionLogAsync(new SessionLog
+            {
+                Date = DateTime.UtcNow.Date,
+                StartTime = _applicationStartTime.Value,
+                Type = SessionType.Application,
+                Notes = "Application started"
+            });
+        }
+
+        public async Task LogApplicationEndAsync()
+        {
+            if (_applicationStarted && _applicationStartTime.HasValue)
+            {
+                var sessionDuration = DateTime.UtcNow - _applicationStartTime.Value;
+
+                await _repository.AddSessionLogAsync(new SessionLog
+                {
+                    Date = DateTime.UtcNow.Date,
+                    StartTime = DateTime.UtcNow,
+                    EndTime = DateTime.UtcNow,
+                    Type = SessionType.Application,
+                    Notes = $"Application ended - Total session time: {sessionDuration:hh\\:mm\\:ss}"
+                });
+
+                await _repository.SaveAsync();
             }
         }
     }

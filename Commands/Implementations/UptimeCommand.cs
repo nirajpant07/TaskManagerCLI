@@ -21,7 +21,7 @@ namespace TaskManagerCLI.Commands.Implementations
                 ? session.TotalFocusTime.TotalMinutes / totalActiveTime.TotalMinutes * 100
                 : 0;
 
-            var result = $"⏱️ Daily Time Summary ({DateTime.Today:yyyy-MM-dd}):\n\n" +
+            var result = $"⏱️ Daily Time Summary ({DateTime.UtcNow.Date:yyyy-MM-dd}):\n\n" +
                         $"🎯 Focus Time: {session.TotalFocusTime:hh\\:mm\\:ss}\n" +
                         $"☕ Break Time: {session.TotalBreakTime:hh\\:mm\\:ss}\n" +
                         $"📊 Total Active: {totalActiveTime:hh\\:mm\\:ss}\n" +
@@ -31,8 +31,8 @@ namespace TaskManagerCLI.Commands.Implementations
 
             if (workDay?.IsActive == true)
             {
-                var elapsed = DateTime.Now - workDay.StartTime;
-                var remaining = workDay.StartTime.Add(workDay.PlannedDuration) - DateTime.Now;
+                var elapsed = DateTime.UtcNow - workDay.StartTime;
+                var remaining = workDay.StartTime.Add(workDay.PlannedDuration) - DateTime.UtcNow;
                 result += $"\n\n📅 Work Day Progress:\n" +
                          $"   Elapsed: {elapsed:hh\\:mm} | Remaining: {remaining:hh\\:mm}";
             }

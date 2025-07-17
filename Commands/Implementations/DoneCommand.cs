@@ -56,7 +56,7 @@ namespace TaskManagerCLI.Commands.Implementations
                 }
 
                 task.Status = Models.TaskStatus.Completed;
-                task.CompletedAt = DateTime.Now;
+                task.CompletedAt = DateTime.UtcNow;
                 await _repository.UpdateTaskAsync(task);
 
                 results.Add($"✅ Task {taskId} completed: {task.Description}");

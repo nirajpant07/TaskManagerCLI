@@ -61,7 +61,8 @@ public enum SessionType
 {
     Focus,
     Break,
-    Pause
+    Pause,
+    Application
 }
 
 public class DayStatistics

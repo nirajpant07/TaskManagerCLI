@@ -25,7 +25,7 @@ namespace TaskManagerCLI.Commands.Implementations
                 return "📅 No active work day.\n💡 Use '!startday' to begin your work day and activate time tracking.";
             }
 
-            var currentTime = DateTime.Now;
+            var currentTime = DateTime.UtcNow;
             var elapsed = currentTime - workDay.StartTime;
             var remaining = await _workDayManager.GetRemainingWorkTimeAsync();
             var plannedEnd = workDay.StartTime.Add(workDay.PlannedDuration);
@@ -36,7 +36,7 @@ namespace TaskManagerCLI.Commands.Implementations
                 ? session.TotalFocusTime.TotalMinutes / session.TotalBreakTime.TotalMinutes
                 : 0;
 
-            return $"📅 Work Day Status ({DateTime.Today:yyyy-MM-dd}):\n\n" +
+            return $"📅 Work Day Status ({DateTime.UtcNow.Date:yyyy-MM-dd}):\n\n" +
                    $"⏰ Time Tracking:\n" +
                    $"   Started: {workDay.StartTime:HH:mm}\n" +
                    $"   Planned End: {plannedEnd:HH:mm}\n" +

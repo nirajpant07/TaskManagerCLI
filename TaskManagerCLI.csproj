@@ -14,6 +14,14 @@
 		<Version>1.0.0</Version>
 		<AssemblyVersion>1.0.0.0</AssemblyVersion>
 		<FileVersion>1.0.0.0</FileVersion>
+		<Authors>Niraj Pant</Authors>
+		<Company />
+		<Description>A powerful command-line interface for personal task management with Pomodoro focus sessions, work day tracking, and productivity analytics. Built with .NET 8.0 for Windows.</Description>
+		<PackageReadmeFile>README.md</PackageReadmeFile>
+		<PackageProjectUrl>https://github.com/nirajpant07/TaskManagerCLI</PackageProjectUrl>
+		<RepositoryUrl>https://github.com/nirajpant07/TaskManagerCLI</RepositoryUrl>
+		<RepositoryType>GitHub</RepositoryType>
+		<PackAsTool>True</PackAsTool>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
@@ -21,6 +29,13 @@
 		<SelfContained>true</SelfContained>
 		<PublishReadyToRun>true</PublishReadyToRun>
 		<IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+		<GenerateAssemblyInfo>False</GenerateAssemblyInfo>
+		<DebugType>embedded</DebugType>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+	  <GenerateAssemblyInfo>False</GenerateAssemblyInfo>
+	  <DebugType>embedded</DebugType>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -37,6 +52,13 @@
 		<Reference Include="System.Windows.Forms">
 			<HintPath>C:\Windows\Microsoft.NET\Framework\v4.0.30319\System.Windows.Forms.dll</HintPath>
 		</Reference>
+	</ItemGroup>
+
+	<ItemGroup>
+	  <None Update="README.md">
+	    <Pack>True</Pack>
+	    <PackagePath>\</PackagePath>
+	  </None>
 	</ItemGroup>
 
 </Project>

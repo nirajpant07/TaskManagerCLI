@@ -38,7 +38,7 @@ namespace TaskManagerCLI.Services
                 if (!Directory.Exists(archivePath))
                     return;
 
-                var cutoffDate = DateTime.Now.AddDays(-retentionDays);
+                var cutoffDate = DateTime.UtcNow.AddDays(-retentionDays);
 
                 foreach (var directory in Directory.GetDirectories(archivePath))
                 {
@@ -76,7 +76,7 @@ namespace TaskManagerCLI.Services
 
                 // Create a backup of current file before restore
                 var restoreBackupPath = Path.Combine(documentsPath, "TaskManager",
-                    $"tasks_before_restore_{DateTime.Now:yyyy-MM-dd_HHmmss}.xlsx");
+                    $"tasks_before_restore_{DateTime.UtcNow:yyyy-MM-dd_HHmmss}.xlsx");
 
                 if (File.Exists(currentFilePath))
                 {

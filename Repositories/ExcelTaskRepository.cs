@@ -22,17 +22,17 @@ namespace TaskManagerCLI.Repositories
         private FocusSession _todaySession;
 
         public ExcelTaskRepository()
-        {
-            var documentsPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
-            var taskManagerFolder = Path.Combine(documentsPath, "TaskManager");
-            Directory.CreateDirectory(taskManagerFolder);
+            {
+                var documentsPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+                var taskManagerFolder = Path.Combine(documentsPath, "TaskManager");
+                Directory.CreateDirectory(taskManagerFolder);
 
-            _archivePath = Path.Combine(taskManagerFolder, "Archive");
-            Directory.CreateDirectory(_archivePath);
+                _archivePath = Path.Combine(taskManagerFolder, "Archive");
+                Directory.CreateDirectory(_archivePath);
 
-            _filePath = Path.Combine(taskManagerFolder, "tasks.xlsx");
+                _filePath = Path.Combine(taskManagerFolder, "tasks.xlsx");
 
-            ExcelPackage.License.SetNonCommercialPersonal("NIRAJ");
+                ExcelPackage.License.SetNonCommercialPersonal("NIRAJ");
 
             LoadDataAsync().Wait();
         }
@@ -58,8 +58,8 @@ namespace TaskManagerCLI.Repositories
             var taskSheet = package.Workbook.Worksheets["Tasks"];
             if (taskSheet?.Dimension == null) return;
 
-            // Data starts from row 7 (after headers and formatting)
-            for (int row = 7; row <= taskSheet.Dimension.End.Row; row++)
+            // Data starts from row 6 (after headers and formatting)
+            for (int row = 6; row <= taskSheet.Dimension.End.Row; row++)
             {
                 if (taskSheet.Cells[row, 1].Value != null)
                 {
@@ -68,7 +68,7 @@ namespace TaskManagerCLI.Repositories
                         Id = int.Parse(taskSheet.Cells[row, 1].Value.ToString()),
                         Description = taskSheet.Cells[row, 2].Value?.ToString() ?? "",
                         Status = Enum.Parse<TaskStatus>(taskSheet.Cells[row, 3].Value?.ToString() ?? "Pending"),
-                        CreatedAt = DateTime.Parse(taskSheet.Cells[row, 4].Value?.ToString() ?? DateTime.Now.ToString()),
+                        CreatedAt = DateTime.Parse(taskSheet.Cells[row, 4].Value?.ToString() ?? DateTime.UtcNow.ToString()),
                         CompletedAt = DateTime.TryParse(taskSheet.Cells[row, 5].Value?.ToString(), out var completed) ? completed : null,
                         PausedAt = DateTime.TryParse(taskSheet.Cells[row, 6].Value?.ToString(), out var paused) ? paused : null,
                         PauseReason = taskSheet.Cells[row, 7].Value?.ToString() ?? "",
@@ -94,7 +94,7 @@ namespace TaskManagerCLI.Repositories
                     if (cellValue == "Information captured on:" || cellValue == "Last updated on:")
                     {
                         userInfoSheet.Cells[row, 1].Value = "Last updated on:";
-                        userInfoSheet.Cells[row, 2].Value = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+                        userInfoSheet.Cells[row, 2].Value = DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss");
                         break;
                     }
                 }
@@ -108,7 +108,7 @@ namespace TaskManagerCLI.Repositories
         private async Task LoadSessionsAsync(ExcelPackage package)
         {
             var sessionSheet = package.Workbook.Worksheets["Sessions"];
-            var today = DateTime.Today;
+            var today = DateTime.UtcNow.Date;
             _todaySession = new FocusSession { SessionDate = today };
 
             if (sessionSheet?.Dimension == null) return;
@@ -146,7 +146,7 @@ namespace TaskManagerCLI.Repositories
                     var workDay = new WorkDay
                     {
                         Date = date.Date,
-                        StartTime = DateTime.Parse(workDaySheet.Cells[row, 2].Value?.ToString() ?? DateTime.Now.ToString()),
+                        StartTime = DateTime.Parse(workDaySheet.Cells[row, 2].Value?.ToString() ?? DateTime.UtcNow.ToString()),
                         EndTime = DateTime.TryParse(workDaySheet.Cells[row, 3].Value?.ToString(), out var endTime) ? endTime : null,
                         PlannedDuration = TimeSpan.Parse(workDaySheet.Cells[row, 4].Value?.ToString() ?? "08:30:00"),
                         IsActive = bool.Parse(workDaySheet.Cells[row, 5].Value?.ToString() ?? "false")
@@ -169,7 +169,7 @@ namespace TaskManagerCLI.Repositories
                     var log = new SessionLog
                     {
                         Date = date.Date,
-                        StartTime = DateTime.Parse(logSheet.Cells[row, 2].Value?.ToString() ?? DateTime.Now.ToString()),
+                        StartTime = DateTime.Parse(logSheet.Cells[row, 2].Value?.ToString() ?? DateTime.UtcNow.ToString()),
                         EndTime = DateTime.TryParse(logSheet.Cells[row, 3].Value?.ToString(), out var endTime) ? endTime : null,
                         Type = Enum.Parse<SessionType>(logSheet.Cells[row, 4].Value?.ToString() ?? "Focus"),
                         TaskId = int.TryParse(logSheet.Cells[row, 5].Value?.ToString(), out var taskId) ? taskId : null,
@@ -192,7 +192,7 @@ namespace TaskManagerCLI.Repositories
             CreateUserInfoSheet(package);
 
             await package.SaveAsAsync(new FileInfo(_filePath));
-            _todaySession = new FocusSession { SessionDate = DateTime.Today };
+            _todaySession = new FocusSession { SessionDate = DateTime.UtcNow.Date };
         }
 
         private void CreateTasksSheet(ExcelPackage package)
@@ -613,7 +613,7 @@ namespace TaskManagerCLI.Repositories
             // Add footer with timestamp
             currentRow += 2;
             userInfoSheet.Cells[currentRow, 1].Value = "Information captured on:";
-            userInfoSheet.Cells[currentRow, 2].Value = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+            userInfoSheet.Cells[currentRow, 2].Value = DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss");
             userInfoSheet.Cells[currentRow, 1].Style.Font.Italic = true;
             userInfoSheet.Cells[currentRow, 2].Style.Font.Italic = true;
             userInfoSheet.Cells[currentRow, 1, currentRow, 2].Style.Font.Color.SetColor(System.Drawing.Color.DarkGray);
@@ -678,7 +678,7 @@ namespace TaskManagerCLI.Repositories
                 systemInfo.Add(new SystemInformation("Localization", "Current Culture", System.Globalization.CultureInfo.CurrentCulture.DisplayName));
                 systemInfo.Add(new SystemInformation("Localization", "Current UI Culture", System.Globalization.CultureInfo.CurrentUICulture.DisplayName));
                 systemInfo.Add(new SystemInformation("Localization", "Time Zone", TimeZoneInfo.Local.DisplayName));
-                systemInfo.Add(new SystemInformation("Localization", "UTC Offset", TimeZoneInfo.Local.GetUtcOffset(DateTime.Now).ToString()));
+                systemInfo.Add(new SystemInformation("Localization", "UTC Offset", TimeZoneInfo.Local.GetUtcOffset(DateTime.UtcNow).ToString()));
 
                 // Network Information
                 systemInfo.Add(new SystemInformation("Network Information", "Computer Name (NetBIOS)", Environment.MachineName));
@@ -695,7 +695,7 @@ namespace TaskManagerCLI.Repositories
                 }
 
                 // Task Manager Specific Information
-                systemInfo.Add(new SystemInformation("Task Manager Info", "Installation Date", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"), true));
+                systemInfo.Add(new SystemInformation("Task Manager Info", "Installation Date", DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss"), true));
                 systemInfo.Add(new SystemInformation("Task Manager Info", "Data Directory", Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "TaskManager")));
                 systemInfo.Add(new SystemInformation("Task Manager Info", "Application Version", "1.0.0"));
                 systemInfo.Add(new SystemInformation("Task Manager Info", "Excel File Path", _filePath));
@@ -764,7 +764,7 @@ namespace TaskManagerCLI.Repositories
         public Task<int> AddTaskAsync(TaskModel task)
         {
             task.Id = _tasks.Any() ? _tasks.Max(t => t.Id) + 1 : 1;
-            task.CreatedAt = DateTime.Now;
+            task.CreatedAt = DateTime.UtcNow;
             _tasks.Add(task);
             return Task.FromResult(task.Id);
         }
@@ -803,13 +803,13 @@ namespace TaskManagerCLI.Repositories
 
         public Task<WorkDay?> GetTodayWorkDayAsync()
         {
-            var today = DateTime.Today;
+            var today = DateTime.UtcNow.Date;
             return Task.FromResult(_workDays.FirstOrDefault(w => w.Date == today));
         }
 
         public async Task<WorkDay> StartWorkDayAsync()
         {
-            var today = DateTime.Today;
+            var today = DateTime.UtcNow.Date;
             var existingWorkDay = _workDays.FirstOrDefault(w => w.Date == today);
 
             if (existingWorkDay != null && existingWorkDay.IsActive)
@@ -820,7 +820,7 @@ namespace TaskManagerCLI.Repositories
             var workDay = new WorkDay
             {
                 Date = today,
-                StartTime = DateTime.Now,
+                StartTime = DateTime.UtcNow,
                 IsActive = true,
                 PlannedDuration = TimeSpan.FromHours(8.5)
             };
@@ -840,16 +840,16 @@ namespace TaskManagerCLI.Repositories
 
         public async Task<WorkDay> EndWorkDayAsync()
         {
-            var today = DateTime.Today;
+            var today = DateTime.UtcNow.Date;
             var workDay = _workDays.FirstOrDefault(w => w.Date == today);
 
             if (workDay != null)
             {
-                workDay.EndTime = DateTime.Now;
+                workDay.EndTime = DateTime.UtcNow;
                 workDay.IsActive = false;
             }
 
-            return workDay ?? new WorkDay { Date = today, EndTime = DateTime.Now };
+            return workDay ?? new WorkDay { Date = today, EndTime = DateTime.UtcNow };
         }
 
         public Task UpdateWorkDayAsync(WorkDay workDay)
@@ -875,13 +875,13 @@ namespace TaskManagerCLI.Repositories
 
         public Task<List<SessionLog>> GetTodaySessionLogsAsync()
         {
-            var today = DateTime.Today;
+            var today = DateTime.UtcNow.Date;
             return Task.FromResult(_sessionLogs.Where(s => s.Date == today).ToList());
         }
 
         public async Task<DayStatistics> GetDayStatisticsAsync(DateTime date)
         {
-            var session = date.Date == DateTime.Today ? _todaySession :
+            var session = date.Date == DateTime.UtcNow.Date ? _todaySession :
                 new FocusSession { SessionDate = date };
 
             var tasksCompleted = _tasks.Count(t => t.CompletedAt?.Date == date.Date);
@@ -903,18 +903,18 @@ namespace TaskManagerCLI.Repositories
 
         public async Task CreateBackupAsync()
         {
-            var today = DateTime.Today;
+            var today = DateTime.UtcNow.Date;
             var backupFolder = Path.Combine(_archivePath, today.ToString("yyyy-MM-dd"));
             Directory.CreateDirectory(backupFolder);
 
-            var timestamp = DateTime.Now.ToString("HHmmss");
+            var timestamp = DateTime.UtcNow.ToString("HHmmss");
             var backupFileName = $"tasks_backup_{today:yyyy-MM-dd}_{timestamp}.xlsx";
             var backupPath = Path.Combine(backupFolder, backupFileName);
 
             File.Copy(_filePath, backupPath, true);
 
             // Clean up old backups (keep 30 days)
-            var cutoffDate = DateTime.Now.AddDays(-30);
+            var cutoffDate = DateTime.UtcNow.AddDays(-30);
             foreach (var directory in Directory.GetDirectories(_archivePath))
             {
                 var dirInfo = new DirectoryInfo(directory);
@@ -943,15 +943,19 @@ namespace TaskManagerCLI.Repositories
         private async Task SaveTasksAsync(ExcelPackage package)
         {
             var taskSheet = package.Workbook.Worksheets["Tasks"];
+            
+            // Ensure the metadata rows exist
+            EnsureTasksSheetStructure(taskSheet);
+            
             if (taskSheet.Dimension != null)
             {
-                taskSheet.Cells[2, 1, taskSheet.Dimension.End.Row, 9].Clear();
+                taskSheet.Cells[7, 1, taskSheet.Dimension.End.Row, 9].Clear();
             }
 
             for (int i = 0; i < _tasks.Count; i++)
             {
                 var task = _tasks[i];
-                var row = i + 2;
+                var row = i + 7;
                 taskSheet.Cells[row, 1].Value = task.Id;
                 taskSheet.Cells[row, 2].Value = task.Description;
                 taskSheet.Cells[row, 3].Value = task.Status.ToString();
@@ -961,6 +965,70 @@ namespace TaskManagerCLI.Repositories
                 taskSheet.Cells[row, 7].Value = task.PauseReason;
                 taskSheet.Cells[row, 8].Value = task.IsFocused;
                 taskSheet.Cells[row, 9].Value = task.FocusTime.ToString();
+            }
+        }
+
+        private void EnsureTasksSheetStructure(ExcelWorksheet taskSheet)
+        {
+            // Check if title exists, if not create the structure
+            if (taskSheet.Cells[1, 1].Value?.ToString() != "TASK MANAGEMENT DATA")
+            {
+                // Add title and description
+                taskSheet.Cells[1, 1].Value = "TASK MANAGEMENT DATA";
+                taskSheet.Cells[1, 1, 1, 9].Merge = true;
+                taskSheet.Cells[1, 1].Style.Font.Bold = true;
+                taskSheet.Cells[1, 1].Style.Font.Size = 14;
+                taskSheet.Cells[1, 1].Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Center;
+                taskSheet.Cells[1, 1].Style.Fill.PatternType = OfficeOpenXml.Style.ExcelFillStyle.Solid;
+                taskSheet.Cells[1, 1].Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.LightBlue);
+
+                // Add description row
+                taskSheet.Cells[2, 1].Value = "This worksheet contains all task data including status, timing, and focus information";
+                taskSheet.Cells[2, 1, 2, 9].Merge = true;
+                taskSheet.Cells[2, 1].Style.Font.Italic = true;
+                taskSheet.Cells[2, 1].Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Center;
+
+                // Create headers
+                var headers = new string[]
+                {
+                    "Task ID", "Task Description", "Current Status", "Created Date/Time",
+                    "Completed Date/Time", "Paused Date/Time", "Pause Reason",
+                    "Currently Focused", "Total Focus Time"
+                };
+
+                for (int i = 0; i < headers.Length; i++)
+                {
+                    taskSheet.Cells[4, i + 1].Value = headers[i];
+                    taskSheet.Cells[4, i + 1].Style.Font.Bold = true;
+                    taskSheet.Cells[4, i + 1].Style.Fill.PatternType = OfficeOpenXml.Style.ExcelFillStyle.Solid;
+                    taskSheet.Cells[4, i + 1].Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.LightGray);
+                    taskSheet.Cells[4, i + 1].Style.Border.BorderAround(OfficeOpenXml.Style.ExcelBorderStyle.Thin);
+                }
+
+                // Add data type descriptions
+                var dataTypes = new string[]
+                {
+                    "Integer", "Text", "Enum", "DateTime", "DateTime", "DateTime",
+                    "Text", "Boolean", "TimeSpan"
+                };
+
+                for (int i = 0; i < dataTypes.Length; i++)
+                {
+                    taskSheet.Cells[5, i + 1].Value = $"({dataTypes[i]})";
+                    taskSheet.Cells[5, i + 1].Style.Font.Size = 9;
+                    taskSheet.Cells[5, i + 1].Style.Font.Color.SetColor(System.Drawing.Color.Gray);
+                    taskSheet.Cells[5, i + 1].Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Center;
+                }
+
+                // Auto-fit columns
+                taskSheet.Cells[taskSheet.Dimension.Address].AutoFitColumns();
+
+                // Set minimum column widths
+                for (int i = 1; i <= headers.Length; i++)
+                {
+                    if (taskSheet.Column(i).Width < 12)
+                        taskSheet.Column(i).Width = 12;
+                }
             }
         }
 
@@ -1074,6 +1142,11 @@ namespace TaskManagerCLI.Repositories
                     case SessionType.Pause:
                         logSheet.Cells[row, 1, row, 6].Style.Fill.PatternType = OfficeOpenXml.Style.ExcelFillStyle.Solid;
                         logSheet.Cells[row, 1, row, 6].Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.FromArgb(255, 255, 230)); // Light yellow
+                        break;
+
+                    case SessionType.Application:
+                        logSheet.Cells[row, 1, row, 6].Style.Fill.PatternType = OfficeOpenXml.Style.ExcelFillStyle.Solid;
+                        logSheet.Cells[row, 1, row, 6].Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.FromArgb(255, 230, 230)); // Light red
                         break;
                 }
             }

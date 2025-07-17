@@ -31,7 +31,7 @@ namespace TaskManagerCLI.Commands.Implementations
 
             currentTask.Status = Models.TaskStatus.Paused;
             currentTask.IsFocused = false;
-            currentTask.PausedAt = DateTime.Now;
+            currentTask.PausedAt = DateTime.UtcNow;
             currentTask.PauseReason = reason;
             await _repository.UpdateTaskAsync(currentTask);
 

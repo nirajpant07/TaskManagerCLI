@@ -29,16 +29,43 @@ class Program
         var host = CreateHostBuilder(args).Build();
         var taskManager = host.Services.GetRequiredService<TaskManagerService>();
 
-        if (args.Length > 0)
+        bool appEndLogged = false;
+        void LogAppEndHandler(object? sender, EventArgs e)
         {
-            // Single command execution
-            var command = string.Join(" ", args);
-            await taskManager.ProcessCommandAsync(command);
+            if (!appEndLogged)
+            {
+                // Use .GetAwaiter().GetResult() because async/await is not allowed in these handlers
+                taskManager.LogApplicationEndAsync().GetAwaiter().GetResult();
+                appEndLogged = true;
+            }
         }
-        else
+
+        AppDomain.CurrentDomain.ProcessExit += LogAppEndHandler;
+        Console.CancelKeyPress += (s, e) => {
+            LogAppEndHandler(s, e);
+            // Allow the process to terminate
+            e.Cancel = false;
+        };
+
+        try
         {
-            // Interactive mode
-            await taskManager.RunInteractiveAsync();
+            if (args.Length > 0)
+            {
+                // Single command execution - log application start
+                await taskManager.LogApplicationStartAsync();
+                var command = string.Join(" ", args);
+                await taskManager.ProcessCommandAsync(command);
+            }
+            else
+            {
+                // Interactive mode
+                await taskManager.RunInteractiveAsync();
+            }
+        }
+        finally
+        {
+            // Log application end
+            await taskManager.LogApplicationEndAsync();
         }
     }
 
