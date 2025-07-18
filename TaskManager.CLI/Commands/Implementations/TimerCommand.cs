@@ -7,11 +7,11 @@ namespace TaskManager.CLI.Commands.Implementations
     public class TimerCommand : ICommand
     {
         private readonly ITaskRepository _repository;
-        private readonly TimerService _timerService;
+        private readonly ITimerService _timerService;
         private readonly INotificationService _notificationService;
         private readonly ISoundService _soundService;
 
-        public TimerCommand(ITaskRepository repository, TimerService timerService,
+        public TimerCommand(ITaskRepository repository, ITimerService timerService,
                            INotificationService notificationService, ISoundService soundService)
         {
             _repository = repository;

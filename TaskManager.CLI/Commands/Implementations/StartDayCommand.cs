@@ -7,10 +7,10 @@ namespace TaskManager.CLI.Commands.Implementations
 {
     public class StartDayCommand : ICommand
     {
-        private readonly WorkDayManagerService _workDayManager;
+        private readonly IWorkDayManagerService _workDayManager;
         private readonly ConsoleHelper _console;
 
-        public StartDayCommand(WorkDayManagerService workDayManager, ConsoleHelper console)
+        public StartDayCommand(IWorkDayManagerService workDayManager, ConsoleHelper console)
         {
             _workDayManager = workDayManager;
             _console = console;

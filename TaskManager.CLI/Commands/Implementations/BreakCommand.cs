@@ -10,11 +10,11 @@ namespace TaskManager.CLI.Commands.Implementations
     public class BreakCommand : ICommand
     {
         private readonly ITaskRepository _repository;
-        private readonly FocusSessionManagerService _sessionManager;
+        private readonly IFocusSessionManagerService _sessionManager;
         private readonly INotificationService _notificationService;
         private readonly ISoundService _soundService;
 
-        public BreakCommand(ITaskRepository repository, FocusSessionManagerService sessionManager,
+        public BreakCommand(ITaskRepository repository, IFocusSessionManagerService sessionManager,
                            INotificationService notificationService, ISoundService soundService)
         {
             _repository = repository;

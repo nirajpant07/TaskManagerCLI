@@ -136,6 +136,8 @@ namespace TaskManager.CLI.Services
                 Type = SessionType.Application,
                 Notes = "Application started"
             });
+
+            await _repository.SaveAsync();
         }
 
         public async Task LogApplicationEndAsync()

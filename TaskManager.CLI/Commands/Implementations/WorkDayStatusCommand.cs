@@ -6,11 +6,11 @@ namespace TaskManager.CLI.Commands.Implementations
 {
     public class WorkDayStatusCommand : ICommand
     {
-        private readonly WorkDayManagerService _workDayManager;
+        private readonly IWorkDayManagerService _workDayManager;
         private readonly ITaskRepository _repository;
         private readonly ConsoleHelper _console;
 
-        public WorkDayStatusCommand(WorkDayManagerService workDayManager, ITaskRepository repository, ConsoleHelper console)
+        public WorkDayStatusCommand(IWorkDayManagerService workDayManager, ITaskRepository repository, ConsoleHelper console)
         {
             _workDayManager = workDayManager;
             _repository = repository;

@@ -2,7 +2,7 @@
 
 namespace TaskManager.CLI.Services
 {
-    public class TimerService
+    public class TimerService : ITimerService
     {
         private Timer? _focusTimer;
         private Timer? _breakTimer;

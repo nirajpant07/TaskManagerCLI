@@ -10,9 +10,9 @@ namespace TaskManager.CLI.Commands.Implementations
     public class FocusCommand : ICommand
     {
         private readonly ITaskRepository _repository;
-        private readonly FocusSessionManagerService _sessionManager;
+        private readonly IFocusSessionManagerService _sessionManager;
 
-        public FocusCommand(ITaskRepository repository, FocusSessionManagerService sessionManager)
+        public FocusCommand(ITaskRepository repository, IFocusSessionManagerService sessionManager)
         {
             _repository = repository;
             _sessionManager = sessionManager;

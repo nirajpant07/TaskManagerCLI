@@ -47,8 +47,8 @@ internal class Program
         {
             if (args.Length > 0)
             {
-                // Single command execution - log application start
-                await taskManager.LogApplicationStartAsync();
+                // Single command execution
+                
                 var command = string.Join(" ", args);
                 await taskManager.ProcessCommandAsync(command);
             }
@@ -71,9 +71,9 @@ internal class Program
             {
                 services.AddSingleton<ITaskRepository, ExcelTaskRepository>();
                 services.AddSingleton<TaskManagerService>();
-                services.AddSingleton<FocusSessionManagerService>();
-                services.AddSingleton<WorkDayManagerService>();
-                services.AddSingleton<TimerService>();
+                services.AddSingleton<IFocusSessionManagerService, FocusSessionManagerService>();
+                services.AddSingleton<IWorkDayManagerService, WorkDayManagerService>();
+                services.AddSingleton<ITimerService, TimerService>();
                 services.AddSingleton<INotificationService, WindowsNotificationService>();
                 services.AddSingleton<ISoundService, WindowsSoundService>();
                 services.AddSingleton<BackupService>();

@@ -8,7 +8,7 @@ using Timer = System.Threading.Timer;
 
 namespace TaskManager.CLI.Services
 {
-    public class WorkDayManagerService
+    public class WorkDayManagerService : IWorkDayManagerService
     {
         private readonly ITaskRepository _repository;
         private readonly INotificationService _notificationService;

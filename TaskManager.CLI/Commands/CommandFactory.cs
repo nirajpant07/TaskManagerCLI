@@ -9,15 +9,15 @@ namespace TaskManager.CLI.Commands
     public class CommandFactory : ICommandFactory
     {
         private readonly ITaskRepository _repository;
-        private readonly FocusSessionManagerService _sessionManager;
-        private readonly WorkDayManagerService _workDayManager;
-        private readonly TimerService _timerService;
+        private readonly IFocusSessionManagerService _sessionManager;
+        private readonly IWorkDayManagerService _workDayManager;
+        private readonly ITimerService _timerService;
         private readonly INotificationService _notificationService;
         private readonly ISoundService _soundService;
         private readonly ConsoleHelper _console;
 
-        public CommandFactory(ITaskRepository repository, FocusSessionManagerService sessionManager,
-                             WorkDayManagerService workDayManager, TimerService timerService,
+        public CommandFactory(ITaskRepository repository, IFocusSessionManagerService sessionManager,
+                             IWorkDayManagerService workDayManager, ITimerService timerService,
                              INotificationService notificationService, ISoundService soundService,
                              ConsoleHelper console)
         {

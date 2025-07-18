@@ -6,9 +6,9 @@ namespace TaskManager.CLI.Commands.Implementations
     public class DoneCommand : ICommand
     {
         private readonly ITaskRepository _repository;
-        private readonly FocusSessionManagerService _sessionManager;
+        private readonly IFocusSessionManagerService _sessionManager;
 
-        public DoneCommand(ITaskRepository repository, FocusSessionManagerService sessionManager)
+        public DoneCommand(ITaskRepository repository, IFocusSessionManagerService sessionManager)
         {
             _repository = repository;
             _sessionManager = sessionManager;

@@ -5,10 +5,10 @@ namespace TaskManager.CLI.Commands.Implementations
 {
     public class EndDayCommand : ICommand
     {
-        private readonly WorkDayManagerService _workDayManager;
+        private readonly IWorkDayManagerService _workDayManager;
         private readonly ConsoleHelper _console;
 
-        public EndDayCommand(WorkDayManagerService workDayManager, ConsoleHelper console)
+        public EndDayCommand(IWorkDayManagerService workDayManager, ConsoleHelper console)
         {
             _workDayManager = workDayManager;
             _console = console;

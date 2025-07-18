@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace TaskManager.CLI.Services
 {
-    public class FocusSessionManagerService
+    public class FocusSessionManagerService : IFocusSessionManagerService
     {
         private readonly ITaskRepository _repository;
         private readonly INotificationService _notificationService;

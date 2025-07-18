@@ -6,9 +6,9 @@ namespace TaskManager.CLI.Commands.Implementations
     public class PauseCommand : ICommand
     {
         private readonly ITaskRepository _repository;
-        private readonly FocusSessionManagerService _sessionManager;
+        private readonly IFocusSessionManagerService _sessionManager;
 
-        public PauseCommand(ITaskRepository repository, FocusSessionManagerService sessionManager)
+        public PauseCommand(ITaskRepository repository, IFocusSessionManagerService sessionManager)
         {
             _repository = repository;
             _sessionManager = sessionManager;
