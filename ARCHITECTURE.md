@@ -212,6 +212,8 @@ sequenceDiagram
 
     User->>CLI: Enter command (!task "New task")
     CLI->>TM: ProcessCommandAsync(command)
+    TM->>REPO: LogCommandExecution(command)
+    REPO->>Excel: Save to SessionLogs sheet
     TM->>CF: CreateCommand("task")
     CF->>CMD: new AddTaskCommand(repository)
     TM->>CMD: ExecuteAsync(parameters)
@@ -459,7 +461,7 @@ graph TB
             Tasks[📋 Tasks Sheet<br/>Task management data]
             Sessions[📊 Sessions Sheet<br/>Daily session tracking]
             WorkDays[📅 WorkDays Sheet<br/>Work day schedule]
-            SessionLogs[📝 SessionLogs Sheet<br/>Detailed activity log]
+            SessionLogs[📝 SessionLogs Sheet<br/>Detailed activity log<br/>including command executions]
         end
         
         subgraph "Configuration Sheets"

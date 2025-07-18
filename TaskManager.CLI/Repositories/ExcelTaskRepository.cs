@@ -429,7 +429,7 @@ namespace TaskManager.CLI.Repositories
             // Add example/legend row
             logSheet.Cells[6, 1].Value = "Examples:";
             logSheet.Cells[6, 1].Style.Font.Bold = true;
-            logSheet.Cells[6, 4].Value = "Focus/Break/Pause";
+            logSheet.Cells[6, 4].Value = "Focus/Break/Pause/Command";
             logSheet.Cells[6, 4].Style.Font.Size = 9;
             logSheet.Cells[6, 4].Style.Font.Color.SetColor(System.Drawing.Color.Blue);
 
@@ -1147,6 +1147,11 @@ namespace TaskManager.CLI.Repositories
                     case SessionType.Application:
                         logSheet.Cells[row, 1, row, 6].Style.Fill.PatternType = OfficeOpenXml.Style.ExcelFillStyle.Solid;
                         logSheet.Cells[row, 1, row, 6].Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.FromArgb(255, 230, 230)); // Light red
+                        break;
+
+                    case SessionType.Command:
+                        logSheet.Cells[row, 1, row, 6].Style.Fill.PatternType = OfficeOpenXml.Style.ExcelFillStyle.Solid;
+                        logSheet.Cells[row, 1, row, 6].Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.FromArgb(240, 240, 240)); // Light gray
                         break;
                 }
             }

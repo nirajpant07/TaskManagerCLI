@@ -33,9 +33,10 @@ A powerful command-line interface (CLI) application for personal task management
 - **Excel-based storage** for easy data sharing and analysis
 - **Automatic backups** on work day completion
 - **UTF-8 support** for international characters
+- **Command logging** tracks all user interactions for audit and analysis
 
 ### 🧪 Quality Assurance
-- **Comprehensive unit test suite** with 99+ test cases
+- **Comprehensive unit test suite** with 105+ test cases
 - **Interface-based architecture** for improved testability
 - **Mock-based testing** with Moq framework
 - **Test coverage reporting** with coverlet.collector
@@ -292,14 +293,14 @@ All data is stored in a single Excel file: **`tasks.xlsx`** (located in your Doc
 3. **WorkDays**
    - Tracks each work day, including start/end times, planned duration, active status, and a list of session logs for that day.
 
-4. **Statistics**
-   - Contains daily productivity metrics such as total focus time, break time, number of completed sessions, and productivity scores.
+4. **SessionLogs**
+   - Detailed chronological log of all activities including focus sessions, breaks, pauses, application events, and **command executions** with timestamps and activity notes.
 
-5. **Backups**
-   - Maintains a log of backup operations, including backup timestamps and file paths for recovery purposes.
+5. **Settings**
+   - Application configuration and user preferences including timer settings, work day duration, and notification preferences.
 
-6. **Metadata**
-   - Stores application-level metadata, version info, and configuration settings to ensure compatibility and smooth upgrades.
+6. **UserInfo**
+   - System and user environment information captured at application startup for compatibility and troubleshooting.
 
 **Backup System:**  
 - The application automatically creates timestamped backups of `tasks.xlsx` when you end a work day, complete focus sessions, or request a manual backup.  
@@ -310,7 +311,7 @@ All data is stored in a single Excel file: **`tasks.xlsx`** (located in your Doc
 
 ## 🧪 Testing
 
-The project includes a comprehensive test suite with 99+ unit tests covering:
+The project includes a comprehensive test suite with 105+ unit tests covering:
 
 ### Test Coverage
 - **Command Implementations**: All 17 command classes tested

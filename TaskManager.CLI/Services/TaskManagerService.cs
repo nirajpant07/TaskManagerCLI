@@ -104,6 +104,9 @@ namespace TaskManager.CLI.Services
             var commandName = parts[0].ToLower();
             var parameters = parts.Length > 1 ? parts[1..] : Array.Empty<string>();
 
+            // Log the command execution
+            await LogCommandExecutionAsync(commandLine);
+
             var command = _commandFactory.CreateCommand(commandName);
             if (command == null)
             {
@@ -121,6 +124,28 @@ namespace TaskManager.CLI.Services
             {
                 await _soundService.PlayErrorSoundAsync();
                 throw new Exception($"Command execution failed: {ex.Message}", ex);
+            }
+        }
+
+        private async Task LogCommandExecutionAsync(string commandLine)
+        {
+            try
+            {
+                var sessionLog = new SessionLog
+                {
+                    Date = DateTime.UtcNow.Date,
+                    StartTime = DateTime.UtcNow,
+                    Type = SessionType.Command,
+                    Notes = $"Command executed: {commandLine}"
+                };
+
+                await _repository.AddSessionLogAsync(sessionLog);
+                await _repository.SaveAsync();
+            }
+            catch (Exception ex)
+            {
+                // Don't let command logging failures break the main functionality
+                _console.WriteError($"Failed to log command: {ex.Message}");
             }
         }
 
