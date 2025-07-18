@@ -162,11 +162,11 @@ graph TB
     BS --> ITR
 
     %% Styling
-    classDef presentationLayer fill:#e1f5fe,stroke:#01579b,stroke-width:2px
-    classDef applicationLayer fill:#f3e5f5,stroke:#4a148c,stroke-width:2px
-    classDef domainLayer fill:#e8f5e8,stroke:#1b5e20,stroke-width:2px
-    classDef infrastructureLayer fill:#fff3e0,stroke:#e65100,stroke-width:2px
-    classDef dataLayer fill:#fce4ec,stroke:#880e4f,stroke-width:2px
+    classDef presentationLayer fill:#E6EBE0,stroke:#000000,stroke-width:2px,color:#000000
+    classDef applicationLayer fill:#5CA4A9,stroke:#000000,stroke-width:2px,color:#000000
+    classDef domainLayer fill:#9BC1BC,stroke:#000000,stroke-width:2px,color:#000000
+    classDef infrastructureLayer fill:#F4F1BB,stroke:#000000,stroke-width:2px,color:#000000
+    classDef dataLayer fill:#E6EBE0,stroke:#000000,stroke-width:2px,color:#000000
 
     class CLI,UI presentationLayer
     class TM,CF,AT,FC,BC,DC,EC,DN,PC,TC,CC,CL,CD,SD,ED,WD,UP,ST,HC applicationLayer
@@ -227,7 +227,7 @@ sequenceDiagram
 ## 🎯 Command Pattern Implementation
 
 ```mermaid
-graph LR
+graph TB
     subgraph "Command Pattern"
         ICommand[ICommand Interface]
         subgraph "Concrete Commands"
@@ -311,6 +311,15 @@ graph LR
     ST --> REPO
     ST --> CONSOLE
     HC --> CF
+
+    %% Styling
+    classDef commandInterface fill:#E6EBE0,stroke:#000000,stroke-width:2px,color:#000000
+    classDef concreteCommands fill:#5CA4A9,stroke:#000000,stroke-width:2px,color:#000000
+    classDef dependencies fill:#9BC1BC,stroke:#000000,stroke-width:2px,color:#000000
+
+    class ICommand commandInterface
+    class AT,FC,BC,DC,EC,DN,PC,TC,CC,CL,CD,SD,ED,WD,UP,ST,HC concreteCommands
+    class REPO,SESSION,WORKDAY,TIMER,NOTIFY,SOUND,CONSOLE dependencies
 ```
 
 ## 🧪 Testing Architecture
@@ -427,6 +436,18 @@ graph TB
     MOQ --> MCF
 
     COVERLET --> XUNIT
+
+    %% Styling
+    classDef testSuite fill:#E6EBE0,stroke:#000000,stroke-width:2px,color:#000000
+    classDef commandTests fill:#5CA4A9,stroke:#000000,stroke-width:2px,color:#000000
+    classDef serviceTests fill:#5CA4A9,stroke:#000000,stroke-width:2px,color:#000000
+    classDef mocks fill:#9BC1BC,stroke:#000000,stroke-width:2px,color:#000000
+    classDef framework fill:#F4F1BB,stroke:#000000,stroke-width:2px,color:#000000
+
+    class ATT,FCT,BCT,DCT,ECT,DNT,PCT,TCT,CCT,CLT,CDT,SDT,EDT,WDT,UPT,STT,HCT commandTests
+    class TMT serviceTests
+    class MREPO,MSESSION,MWORKDAY,MTIMER,MNOTIFY,MSOUND,MCONSOLE mocks
+    class XUNIT,MOQ,COVERLET framework
 ```
 
 ## 📁 Data Storage Architecture
@@ -463,6 +484,16 @@ graph TB
     Excel --> Archive
     Archive --> DailyBackups
     DailyBackups --> TimestampedFiles
+
+    %% Styling
+    classDef excelFile fill:#E6EBE0,stroke:#000000,stroke-width:2px,color:#000000
+    classDef coreData fill:#5CA4A9,stroke:#000000,stroke-width:2px,color:#000000
+    classDef configData fill:#9BC1BC,stroke:#000000,stroke-width:2px,color:#000000
+    classDef backupSystem fill:#F4F1BB,stroke:#000000,stroke-width:2px,color:#000000
+
+    class Tasks,Sessions,WorkDays,SessionLogs coreData
+    class Settings,UserInfo configData
+    class Archive,DailyBackups,TimestampedFiles backupSystem
 ```
 
 ## 🔧 Dependency Injection Configuration
@@ -515,6 +546,15 @@ graph TB
         CF --> SOUND
         CF --> CH
     end
+
+    %% Styling
+    classDef diContainer fill:#E6EBE0,stroke:#000000,stroke-width:2px,color:#000000
+    classDef singletonServices fill:#5CA4A9,stroke:#000000,stroke-width:2px,color:#000000
+    classDef transientServices fill:#9BC1BC,stroke:#000000,stroke-width:2px,color:#000000
+    classDef dependencies fill:#F4F1BB,stroke:#000000,stroke-width:2px,color:#000000
+
+    class REPO,FSM,WDM,TS,NOTIFY,SOUND,BS,CH,TM singletonServices
+    class CF transientServices
 ```
 
 ## 🎯 Key Architectural Principles
