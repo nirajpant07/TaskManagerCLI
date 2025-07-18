@@ -34,6 +34,12 @@ A powerful command-line interface (CLI) application for personal task management
 - **Automatic backups** on work day completion
 - **UTF-8 support** for international characters
 
+### 🧪 Quality Assurance
+- **Comprehensive unit test suite** with 99+ test cases
+- **Interface-based architecture** for improved testability
+- **Mock-based testing** with Moq framework
+- **Test coverage reporting** with coverlet.collector
+
 ## 🛠️ Requirements
 
 - **.NET 8.0** or later
@@ -62,13 +68,25 @@ dotnet build
 dotnet run --project TaskManager.CLI
 ```
 
+### Run Tests
+```bash
+# Run all tests
+dotnet test
+
+# Run tests with coverage
+dotnet test --collect:"XPlat Code Coverage"
+
+# Run tests with verbose output
+dotnet test --verbosity normal
+```
+
 ### Single File Distribution
 The project is configured to build as a single executable file:
 ```bash
 # Build for release
 dotnet publish TaskManager.CLI -c Release
 
-# The executable will be in TaskManager.CLI/bin/Release/net80indows/
+# The executable will be in TaskManager.CLI/bin/Release/net8.0-windows/
 ```
 
 ## 🎮 Usage
@@ -94,7 +112,7 @@ TaskManagerCLI.exe "!stats"
 |---------|-------------|---------|
 | `!task <description>` | Add new task(s) (comma-separated) | `!task Review code, Write tests` |
 | `!edit <id> <description>` | Edit task description | `!edit 1 Updated task description` |
-| `!done <id>` | Mark task as completed | `!done1` |
+| `!done <id>` | Mark task as completed | `!done 1` |
 | `!delete <id>` | Delete task | `!delete 1` |
 
 ### 🎯 Focus & Break Management
@@ -144,9 +162,9 @@ The application follows a clean architecture pattern with the following componen
 
 ### Key Services
 - **TaskManagerService**: Main application orchestrator
-- **FocusSessionManagerService**: Manages focus and break sessions
-- **WorkDayManagerService**: Handles work day tracking
-- **TimerService**: Manages Pomodoro timers
+- **IFocusSessionManagerService**: Manages focus and break sessions
+- **IWorkDayManagerService**: Handles work day tracking
+- **ITimerService**: Manages Pomodoro timers
 - **BackupService**: Handles data backups
 - **WindowsNotificationService**: Windows-specific notifications
 - **WindowsSoundService**: Audio feedback
@@ -156,6 +174,12 @@ The application follows a clean architecture pattern with the following componen
 - **FocusSession**: Focus session data and statistics
 - **WorkDay**: Work day tracking and session logs
 - **DayStatistics**: Productivity metrics and analytics
+
+### Testing Architecture
+- **Interface-based design**: All services implement interfaces for testability
+- **Dependency injection**: Proper DI container configuration
+- **Mock-based testing**: Comprehensive unit tests with Moq
+- **Test coverage**: 99+ test cases covering all major functionality
 
 ## 🔧 Configuration
 
@@ -183,10 +207,40 @@ TaskManagerCLI/
 │   │   ├── ITaskRepository.cs # Repository interface
 │   │   └── ExcelTaskRepository.cs # Excel-based implementation
 │   ├── Services/            # Business logic services
+│   │   ├── IFocusSessionManagerService.cs # Focus session interface
+│   │   ├── IWorkDayManagerService.cs # Work day interface
+│   │   ├── ITimerService.cs # Timer interface
+│   │   ├── FocusSessionManagerService.cs # Focus session implementation
+│   │   ├── WorkDayManagerService.cs # Work day implementation
+│   │   ├── TimerService.cs # Timer implementation
+│   │   ├── TaskManagerService.cs # Main service
+│   │   ├── BackupService.cs # Backup functionality
+│   │   ├── WindowsNotificationService.cs # Windows notifications
+│   │   └── WindowsSoundService.cs # Audio feedback
 │   ├── Utilities/
 │   │   └── ConsoleHelper.cs # Console I/O utilities
 │   ├── Program.cs           # Application entry point
 │   └── TaskManager.CLI.csproj # Project configuration
+├── TaskManager.CLI.Tests/   # Comprehensive test suite
+│   ├── AddTaskCommandTests.cs
+│   ├── BreakCommandTests.cs
+│   ├── CheckCommandTests.cs
+│   ├── ClearDoneCommandTests.cs
+│   ├── ClearListCommandTests.cs
+│   ├── DeleteCommandTests.cs
+│   ├── DoneCommandTests.cs
+│   ├── EditTaskCommandTests.cs
+│   ├── EndDayCommandTests.cs
+│   ├── FocusCommandTests.cs
+│   ├── HelpCommandTests.cs
+│   ├── PauseCommandTests.cs
+│   ├── StartDayCommandTests.cs
+│   ├── StatsCommandTests.cs
+│   ├── TaskManagerServiceTests.cs
+│   ├── TimerCommandTests.cs
+│   ├── UptimeCommandTests.cs
+│   ├── WorkDayStatusCommandTests.cs
+│   └── TaskManager.CLI.Tests.csproj # Test project configuration
 ├── TaskManager.sln          # Solution file
 ├── README.md               # This file
 ├── LICENSE                 # License information
@@ -220,7 +274,7 @@ TaskManagerCLI/
    !stats
    ```
 
-6*End your work day**:
+6. **End your work day**:
    ```
    !endday
    ```
@@ -253,6 +307,38 @@ All data is stored in a single Excel file: **`tasks.xlsx`** (located in your Doc
 
 **Note:**  
 - You can open and analyze `tasks.xlsx` in Excel for advanced filtering, reporting, or sharing your productivity data.
+
+## 🧪 Testing
+
+The project includes a comprehensive test suite with 99+ unit tests covering:
+
+### Test Coverage
+- **Command Implementations**: All 17 command classes tested
+- **Service Layer**: Core business logic services tested
+- **Edge Cases**: Error handling and boundary conditions
+- **State Changes**: Task status transitions and session management
+- **Mock Integration**: Proper dependency mocking with Moq
+
+### Running Tests
+```bash
+# Run all tests
+dotnet test
+
+# Run with coverage
+dotnet test --collect:"XPlat Code Coverage"
+
+# Run specific test class
+dotnet test --filter "FullyQualifiedName~FocusCommandTests"
+
+# Run with verbose output
+dotnet test --verbosity normal
+```
+
+### Test Architecture
+- **xUnit framework** for test execution
+- **Moq library** for dependency mocking
+- **Interface-based design** for improved testability
+- **Comprehensive assertions** for behavior verification
 
 ## 🔄 Backup System
 
