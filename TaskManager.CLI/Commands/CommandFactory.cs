@@ -87,7 +87,8 @@ namespace TaskManager.CLI.Commands
             sb.AppendLine("  !timer <focus>/<break> - Set timer (e.g., !timer 25/5)");
             sb.AppendLine("  !uptime                - Show daily focus/break time");
             sb.AppendLine("  !stats                 - Detailed daily statistics");
-            sb.AppendLine("  !report                - Generate HTML analytics report");
+            sb.AppendLine("  !report [start] [end]  - Generate HTML analytics report");
+            sb.AppendLine("                          (e.g., !report 2024-01-01 2024-01-31)");
             sb.AppendLine();
 
             sb.AppendLine("🧹 Cleanup:");
