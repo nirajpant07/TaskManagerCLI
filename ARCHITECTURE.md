@@ -32,6 +32,7 @@ graph TB
             UP[UptimeCommand]
             ST[StatsCommand]
             HC[HelpCommand]
+            RC[ReportCommand]
         end
     end
 
@@ -43,6 +44,7 @@ graph TB
             BS[BackupService]
             WNS[WindowsNotificationService]
             WSS[WindowsSoundService]
+            HRG[HtmlReportGenerator]
         end
         
         subgraph "Interfaces"
@@ -70,6 +72,7 @@ graph TB
             Settings[Settings Sheet]
             UserInfo[UserInfo Sheet]
         end
+        Reports[(Reports Directory<br/>HTML Reports)]
     end
 
     %% Presentation Layer Connections
@@ -95,6 +98,7 @@ graph TB
     CF --> UP
     CF --> ST
     CF --> HC
+    CF --> RC
 
     %% Command Dependencies
     AT --> ITR
@@ -128,6 +132,9 @@ graph TB
     UP --> ITR
     ST --> ITR
     ST --> CH
+    RC --> ITR
+    RC --> CH
+    RC --> HRG
     HC --> CF
 
     %% Service Implementations
@@ -148,6 +155,7 @@ graph TB
     Excel --> SessionLogs
     Excel --> Settings
     Excel --> UserInfo
+    HRG --> Reports
 
     %% Service Dependencies
     FSM --> ITR
@@ -169,10 +177,10 @@ graph TB
     classDef dataLayer fill:#E6EBE0,stroke:#000000,stroke-width:2px,color:#000000
 
     class CLI,UI presentationLayer
-    class TM,CF,AT,FC,BC,DC,EC,DN,PC,TC,CC,CL,CD,SD,ED,WD,UP,ST,HC applicationLayer
-    class FSM,WDM,TS,BS,WNS,WSS,IFSM,IWDM,ITS,INOT,ISND domainLayer
+    class TM,CF,AT,FC,BC,DC,EC,DN,PC,TC,CC,CL,CD,SD,ED,WD,UP,ST,HC,RC applicationLayer
+    class FSM,WDM,TS,BS,WNS,WSS,HRG,IFSM,IWDM,ITS,INOT,ISND domainLayer
     class ETR,ITR,CH infrastructureLayer
-    class Excel,Tasks,Sessions,WorkDays,SessionLogs,Settings,UserInfo dataLayer
+    class Excel,Tasks,Sessions,WorkDays,SessionLogs,Settings,UserInfo,Reports dataLayer
 ```
 
 ## 📊 Component Relationships
@@ -184,7 +192,7 @@ graph TB
 ### 2. **Application Layer**
 - **TaskManagerService**: Main orchestrator and application entry point
 - **CommandFactory**: Creates and manages command instances
-- **Commands**: 17 command implementations following Command pattern
+- **Commands**: 18 command implementations following Command pattern
 
 ### 3. **Domain Layer**
 - **Services**: Business logic implementation

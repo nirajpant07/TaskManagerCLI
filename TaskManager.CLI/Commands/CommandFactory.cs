@@ -50,6 +50,7 @@ namespace TaskManager.CLI.Commands
                 "cleardone" => new ClearDoneCommand(_repository),
                 "uptime" => new UptimeCommand(_repository),
                 "stats" => new StatsCommand(_repository, _console),
+                "report" => new ReportCommand(_repository, _console),
                 "commands" or "help" => new HelpCommand(this),
                 _ => null
             };
@@ -86,6 +87,7 @@ namespace TaskManager.CLI.Commands
             sb.AppendLine("  !timer <focus>/<break> - Set timer (e.g., !timer 25/5)");
             sb.AppendLine("  !uptime                - Show daily focus/break time");
             sb.AppendLine("  !stats                 - Detailed daily statistics");
+            sb.AppendLine("  !report                - Generate HTML analytics report");
             sb.AppendLine();
 
             sb.AppendLine("🧹 Cleanup:");

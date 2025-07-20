@@ -34,9 +34,10 @@ A powerful command-line interface (CLI) application for personal task management
 - **Automatic backups** on work day completion
 - **UTF-8 support** for international characters
 - **Command logging** tracks all user interactions for audit and analysis
+- **HTML reports** with interactive charts and detailed analytics
 
 ### 🧪 Quality Assurance
-- **Comprehensive unit test suite** with 105+ test cases
+- **Comprehensive unit test suite** with 113+ test cases
 - **Interface-based architecture** for improved testability
 - **Mock-based testing** with Moq framework
 - **Test coverage reporting** with coverlet.collector
@@ -138,6 +139,7 @@ TaskManagerCLI.exe "!stats"
 | `!timer <focus>/<break>` | Set timer | `!timer 25/5` |
 | `!uptime` | Show daily focus/break time | `!uptime` |
 | `!stats` | Detailed daily statistics | `!stats` |
+| `!report` | Generate HTML analytics report | `!report` |
 
 ### 🧹 Cleanup
 | Command | Description | Example |
@@ -180,7 +182,7 @@ The application follows a clean architecture pattern with the following componen
 - **Interface-based design**: All services implement interfaces for testability
 - **Dependency injection**: Proper DI container configuration
 - **Mock-based testing**: Comprehensive unit tests with Moq
-- **Test coverage**: 99+ test cases covering all major functionality
+- **Test coverage**: 113+ test cases covering all major functionality
 
 ## 🔧 Configuration
 
@@ -311,7 +313,7 @@ All data is stored in a single Excel file: **`tasks.xlsx`** (located in your Doc
 
 ## 🧪 Testing
 
-The project includes a comprehensive test suite with 105+ unit tests covering:
+The project includes a comprehensive test suite with 113+ unit tests covering:
 
 ### Test Coverage
 - **Command Implementations**: All 17 command classes tested
