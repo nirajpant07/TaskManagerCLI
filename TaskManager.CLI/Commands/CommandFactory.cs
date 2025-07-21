@@ -87,8 +87,12 @@ namespace TaskManager.CLI.Commands
             sb.AppendLine("  !timer <focus>/<break> - Set timer (e.g., !timer 25/5)");
             sb.AppendLine("  !uptime                - Show daily focus/break time");
             sb.AppendLine("  !stats                 - Detailed daily statistics");
-            sb.AppendLine("  !report [start] [end]  - Generate HTML analytics report");
-            sb.AppendLine("                          (e.g., !report 2024-01-01 2024-01-31)");
+            sb.AppendLine("  !report                - Generate HTML report (last 30 days)");
+            sb.AppendLine("  !report <end_date>     - Generate report (30 days before end_date)");
+            sb.AppendLine("  !report <start> <end>  - Generate report for date range");
+            sb.AppendLine("                          Examples:");
+            sb.AppendLine("                            !report 2024-01-31");
+            sb.AppendLine("                            !report 2024-01-01 2024-01-31");
             sb.AppendLine();
 
             sb.AppendLine("🧹 Cleanup:");
@@ -101,6 +105,8 @@ namespace TaskManager.CLI.Commands
             sb.AppendLine("  !focus next 1");
             sb.AppendLine("  !timer 45/15");
             sb.AppendLine("  !break");
+            sb.AppendLine("  !report");
+            sb.AppendLine("  !report 2024-01-31");
 
             return sb.ToString();
         }

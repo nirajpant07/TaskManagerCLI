@@ -44,7 +44,7 @@ graph TB
             BS[BackupService]
             WNS[WindowsNotificationService]
             WSS[WindowsSoundService]
-            HRG[HtmlReportGenerator]
+            HRG[HtmlReportGenerator<br/>Enhanced Tooltip System]
         end
         
         subgraph "Interfaces"
@@ -336,7 +336,7 @@ graph TB
 
 ```mermaid
 graph TB
-    subgraph "Test Suite (99+ Tests)"
+    subgraph "Test Suite (125+ Tests)"
         subgraph "Command Tests"
             ATT[AddTaskCommandTests]
             FCT[FocusCommandTests]
@@ -359,6 +359,7 @@ graph TB
         
         subgraph "Service Tests"
             TMT[TaskManagerServiceTests]
+            HRGT[HtmlReportGeneratorTests]
         end
     end
 
@@ -435,6 +436,7 @@ graph TB
     XUNIT --> STT
     XUNIT --> HCT
     XUNIT --> TMT
+    XUNIT --> HRGT
 
     MOQ --> MREPO
     MOQ --> MSESSION
@@ -455,7 +457,7 @@ graph TB
     classDef framework fill:#F4F1BB,stroke:#000000,stroke-width:2px,color:#000000
 
     class ATT,FCT,BCT,DCT,ECT,DNT,PCT,TCT,CCT,CLT,CDT,SDT,EDT,WDT,UPT,STT,HCT commandTests
-    class TMT serviceTests
+    class TMT,HRGT serviceTests
     class MREPO,MSESSION,MWORKDAY,MTIMER,MNOTIFY,MSOUND,MCONSOLE mocks
     class XUNIT,MOQ,COVERLET framework
 ```
@@ -598,7 +600,7 @@ graph TB
 
 ### **Testability**
 - Interface-based design enables comprehensive unit testing
-- Mock-based testing with 99+ test cases
+- Mock-based testing with 125+ test cases
 - High test coverage with coverlet.collector
 
 ### **Maintainability**
@@ -615,5 +617,160 @@ graph TB
 - Comprehensive error handling
 - Automatic backup system
 - Graceful degradation for failures
+
+## 📊 HTML Report Generator & Tooltip System
+
+### Enhanced Tooltip Architecture
+
+The HTML Report Generator includes a sophisticated tooltip system designed for optimal user experience:
+
+```mermaid
+graph TB
+    subgraph "Tooltip System Components"
+        subgraph "User Interaction"
+            HOVER[Mouse Hover]
+            CLICK[Mouse Click]
+            MOVE[Mouse Move]
+            LEAVE[Mouse Leave]
+            ESCAPE[Escape Key]
+        end
+        
+        subgraph "Tooltip Engine"
+            POSITION[Position Calculator]
+            BOUNDS[Viewport Bounds Checker]
+            TIMEOUT[Delay Manager]
+            CLEANUP[Cleanup Handler]
+        end
+        
+        subgraph "Visual Components"
+            ICON[Info Icon ℹ️]
+            TOOLTIP[Black Tooltip Box]
+            ARROW[Position Arrow]
+            ANIMATION[Fade Animation]
+        end
+        
+        subgraph "Positioning Logic"
+            TOP[Top Position]
+            BOTTOM[Bottom Position]
+            LEFT[Left Position]
+            RIGHT[Right Position]
+            ADJUST[Auto Adjust]
+        end
+    end
+    
+    subgraph "Event Flow"
+        HOVER --> TIMEOUT
+        TIMEOUT --> POSITION
+        MOVE --> POSITION
+        POSITION --> BOUNDS
+        BOUNDS --> ADJUST
+        ADJUST --> TOOLTIP
+        LEAVE --> CLEANUP
+        CLICK --> CLEANUP
+        ESCAPE --> CLEANUP
+    end
+    
+    subgraph "Styling System"
+        ICON --> TOOLTIP
+        TOOLTIP --> ARROW
+        TOOLTIP --> ANIMATION
+    end
+    
+    %% Styling
+    classDef interaction fill:#E6EBE0,stroke:#000000,stroke-width:2px,color:#000000
+    classDef engine fill:#5CA4A9,stroke:#000000,stroke-width:2px,color:#000000
+    classDef visual fill:#9BC1BC,stroke:#000000,stroke-width:2px,color:#000000
+    classDef positioning fill:#F4F1BB,stroke:#000000,stroke-width:2px,color:#000000
+    
+    class HOVER,CLICK,MOVE,LEAVE,ESCAPE interaction
+    class POSITION,BOUNDS,TIMEOUT,CLEANUP engine
+    class ICON,TOOLTIP,ARROW,ANIMATION visual
+    class TOP,BOTTOM,LEFT,RIGHT,ADJUST positioning
+```
+
+### Key Features
+
+1. **Mouse-Tracked Positioning**
+   - Tooltips follow mouse cursor position
+   - Real-time position updates during mouse movement
+   - Precise placement relative to information icons
+
+2. **Smart Viewport Management**
+   - Automatic detection of screen boundaries
+   - Dynamic position adjustment to prevent clipping
+   - Fallback positioning when primary position is unavailable
+
+3. **Enhanced User Experience**
+   - 300ms delay to prevent accidental triggers
+   - Smooth fade-in/fade-out animations
+   - Multiple interaction modes (hover, click, keyboard)
+
+4. **Accessibility Features**
+   - Keyboard navigation support (Escape key)
+   - High contrast design (black background, white text)
+   - Screen reader friendly information icons
+
+5. **Performance Optimizations**
+   - Efficient DOM manipulation
+   - Proper event cleanup and memory management
+   - Minimal reflows and repaints
+
+### Technical Implementation
+
+```javascript
+// Core tooltip positioning algorithm
+function showInfoTooltip(mouseX, mouseY, description) {
+    // Calculate optimal position based on mouse coordinates
+    let tooltipX = mouseX - (tooltipRect.width / 2);
+    let tooltipY = mouseY - tooltipRect.height - 15;
+    
+    // Adjust for viewport bounds
+    if (tooltipY < 10) tooltipY = mouseY + 15;
+    if (tooltipX < 10) tooltipX = 10;
+    if (tooltipX + tooltipRect.width > viewportWidth - 10) {
+        tooltipX = viewportWidth - tooltipRect.width - 10;
+    }
+    
+    // Apply position and show tooltip
+    tooltip.style.left = tooltipX + 'px';
+    tooltip.style.top = tooltipY + 'px';
+}
+```
+
+### CSS Styling System
+
+```css
+/* Info icon styling */
+.info-icon {
+    display: inline-block;
+    cursor: pointer;
+    font-size: 0.8em;
+    margin-left: 8px;
+    color: #667eea;
+    transition: all 0.3s ease;
+    position: relative;
+    vertical-align: middle;
+}
+
+/* Tooltip styling */
+.info-tooltip {
+    position: fixed;
+    background: #000000;
+    color: #ffffff;
+    padding: 12px 16px;
+    border-radius: 8px;
+    font-size: 0.85em;
+    max-width: 300px;
+    white-space: normal;
+    text-align: left;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5);
+    z-index: 10000;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+    pointer-events: none;
+    border: 1px solid #333333;
+}
+```
 
 This architecture provides a solid foundation for a maintainable, testable, and extensible task management system while following industry best practices and design patterns. 

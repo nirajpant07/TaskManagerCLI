@@ -34,10 +34,10 @@ A powerful command-line interface (CLI) application for personal task management
 - **Automatic backups** on work day completion
 - **UTF-8 support** for international characters
 - **Command logging** tracks all user interactions for audit and analysis
-- **HTML reports** with interactive charts and detailed analytics
+- **HTML reports** with interactive charts, detailed analytics, and enhanced tooltip system
 
 ### 🧪 Quality Assurance
-- **Comprehensive unit test suite** with 113+ test cases
+- **Comprehensive unit test suite** with 125+ test cases
 - **Interface-based architecture** for improved testability
 - **Mock-based testing** with Moq framework
 - **Test coverage reporting** with coverlet.collector
@@ -139,7 +139,9 @@ TaskManagerCLI.exe "!stats"
 | `!timer <focus>/<break>` | Set timer | `!timer 25/5` |
 | `!uptime` | Show daily focus/break time | `!uptime` |
 | `!stats` | Detailed daily statistics | `!stats` |
-| `!report` | Generate HTML analytics report | `!report` |
+| `!report` | Generate HTML report (last 30 days) | `!report` |
+| `!report <end_date>` | Generate report (30 days before end_date) | `!report 2024-01-31` |
+| `!report <start> <end>` | Generate report for specific date range | `!report 2024-01-01 2024-01-31` |
 
 ### 🧹 Cleanup
 | Command | Description | Example |
@@ -182,7 +184,7 @@ The application follows a clean architecture pattern with the following componen
 - **Interface-based design**: All services implement interfaces for testability
 - **Dependency injection**: Proper DI container configuration
 - **Mock-based testing**: Comprehensive unit tests with Moq
-- **Test coverage**: 113+ test cases covering all major functionality
+- **Test coverage**: 125+ test cases covering all major functionality
 
 ## 🔧 Configuration
 
@@ -282,6 +284,15 @@ TaskManagerCLI/
    !endday
    ```
 
+7. **Generate productivity report**:
+   ```
+   !report
+   ```
+   Or for a specific period:
+   ```
+   !report 2024-01-01 2024-01-31
+   ```
+
 ## 📊 Data Storage
 
 All data is stored in a single Excel file: **`tasks.xlsx`** (located in your Documents/TaskManager folder). This file contains the following six sheets:
@@ -308,12 +319,32 @@ All data is stored in a single Excel file: **`tasks.xlsx`** (located in your Doc
 - The application automatically creates timestamped backups of `tasks.xlsx` when you end a work day, complete focus sessions, or request a manual backup.  
 - Backups are stored in the `Archive` subfolder for easy recovery.
 
+**HTML Reports:**
+- Generate comprehensive productivity reports with interactive charts and analytics
+- **Multiple report variants:**
+  - `!report` - Generate report for the last 30 days
+  - `!report <end_date>` - Generate report from 30 days before the specified end date
+  - `!report <start_date> <end_date>` - Generate report for a specific date range
+- Enhanced tooltip system with mouse-tracked positioning and information icons
+- Black background tooltips with white text for optimal readability
+- Automatic tooltip positioning and viewport bounds detection
+- Support for hover, click, and keyboard interactions (Escape key)
+- **Report includes:**
+  - Task completion trends and analytics
+  - Focus session performance metrics
+  - Productivity scoring and efficiency analysis
+  - Interactive charts (task status, daily completions, session distribution)
+  - Hourly activity patterns and top commands used
+  - Work day statistics and user/system information
+  - Archived data analysis from previous periods
+
 **Note:**  
 - You can open and analyze `tasks.xlsx` in Excel for advanced filtering, reporting, or sharing your productivity data.
+- HTML reports are saved in Documents/TaskManager/Reports folder with date range in filename.
 
 ## 🧪 Testing
 
-The project includes a comprehensive test suite with 113+ unit tests covering:
+The project includes a comprehensive test suite with 125+ unit tests covering:
 
 ### Test Coverage
 - **Command Implementations**: All 17 command classes tested

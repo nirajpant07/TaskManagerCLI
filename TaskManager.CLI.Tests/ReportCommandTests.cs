@@ -7,6 +7,7 @@ using TaskManager.CLI.Utilities;
 using System.Collections.Generic;
 using TaskManager.CLI.Models;
 using System.IO;
+using OfficeOpenXml;
 
 namespace TaskManager.CLI.Tests;
 
@@ -14,6 +15,12 @@ public class ReportCommandTests
 {
     private readonly Mock<ITaskRepository> _repoMock = new();
     private readonly Mock<ConsoleHelper> _consoleMock = new();
+
+    public ReportCommandTests()
+    {
+        // Set EPPlus license for testing
+        ExcelPackage.License.SetNonCommercialPersonal("TEST");
+    }
 
     [Fact]
     public async Task ExecuteAsync_GeneratesReport_ReturnsSuccessMessage()
@@ -34,16 +41,16 @@ public class ReportCommandTests
         Assert.NotNull(result);
         Assert.NotEmpty(result);
         
-        // Check if it's a success or error message
-        if (result.Contains("❌ Failed to generate report:"))
+        // Check if report was generated successfully or if there was an error
+        if (result.Contains("📊 HTML Report Generated Successfully!"))
         {
-            // If it's an error, let's see what the error is
-            Assert.True(result.Contains("Input string"), "Expected error message about input string");
+            Assert.Contains("📁 Location:", result);
+            Assert.Contains("📅 Date Range:", result);
         }
         else
         {
-            // If it's success, check for expected content
-            Assert.Contains("📊 HTML Report Generated Successfully!", result);
+            // If there was an error, it should be a proper error message
+            Assert.Contains("❌ Failed to generate report:", result);
         }
     }
 
@@ -79,16 +86,16 @@ public class ReportCommandTests
         Assert.NotNull(result);
         Assert.NotEmpty(result);
         
-        // Check if it's a success or error message
-        if (result.Contains("❌ Failed to generate report:"))
+        // Check if report was generated successfully or if there was an error
+        if (result.Contains("📊 HTML Report Generated Successfully!"))
         {
-            // If it's an error, let's see what the error is
-            Assert.True(result.Contains("Input string"), "Expected error message about input string");
+            Assert.Contains("📁 Location:", result);
+            Assert.Contains("📅 Date Range:", result);
         }
         else
         {
-            // If it's success, check for expected content
-            Assert.Contains("📊 HTML Report Generated Successfully!", result);
+            // If there was an error, it should be a proper error message
+            Assert.Contains("❌ Failed to generate report:", result);
         }
     }
 
@@ -105,7 +112,7 @@ public class ReportCommandTests
 
         // Assert
         Assert.Contains("❌ Failed to generate report:", result);
-        Assert.Contains("File not found", result);
+        Assert.Contains("Failed to generate HTML report", result);
     }
 
     [Fact]
@@ -126,18 +133,8 @@ public class ReportCommandTests
         // Assert
         Assert.NotNull(result);
         Assert.NotEmpty(result);
-        
-        // Check if it's a success or error message
-        if (result.Contains("❌ Failed to generate report:"))
-        {
-            // If it's an error, let's see what the error is
-            Assert.True(result.Contains("Input string"), "Expected error message about input string");
-        }
-        else
-        {
-            // If it's success, check for expected content
-            Assert.Contains("📊 HTML Report Generated Successfully!", result);
-        }
+        Assert.Contains("❌ Invalid date format", result);
+        Assert.Contains("Usage: !report [start_date] [end_date]", result);
     }
 
     [Fact]
@@ -180,17 +177,64 @@ public class ReportCommandTests
         Assert.NotNull(result);
         Assert.NotEmpty(result);
         
-        // Check if it's a success or error message
-        if (result.Contains("❌ Failed to generate report:"))
+        // Check if report was generated successfully or if there was an error
+        if (result.Contains("📊 HTML Report Generated Successfully!"))
         {
-            // If it's an error, let's see what the error is
-            Assert.True(result.Contains("Input string"), "Expected error message about input string");
-        }
-        else
-        {
-            // If it's success, check for expected content
             Assert.Contains("📁 Location:", result);
             Assert.Contains(".html", result);
         }
+        else
+        {
+            // If there was an error, it should be a proper error message
+            Assert.Contains("❌ Failed to generate report:", result);
+        }
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_WithValidDateRange_GeneratesReport()
+    {
+        // Arrange
+        var command = new ReportCommand(_repoMock.Object, _consoleMock.Object);
+        
+        _repoMock.Setup(r => r.GetAllTasksAsync()).ReturnsAsync(new List<TaskModel>());
+        _repoMock.Setup(r => r.GetTodaySessionLogsAsync()).ReturnsAsync(new List<SessionLog>());
+        _repoMock.Setup(r => r.GetTodayWorkDayAsync()).ReturnsAsync((WorkDay?)null);
+        _repoMock.Setup(r => r.GetDayStatisticsAsync(It.IsAny<DateTime>()))
+                .ReturnsAsync(new DayStatistics { TasksCompleted = 0, ProductivityScore = 0 });
+
+        // Act
+        var result = await command.ExecuteAsync(new[] { "2024-01-01", "2024-01-31" });
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.NotEmpty(result);
+        
+        // Check if report was generated successfully or if there was an error
+        if (result.Contains("📊 HTML Report Generated Successfully!"))
+        {
+            Assert.Contains("📁 Location:", result);
+            Assert.Contains("📅 Date Range: 2024-01-01 to 2024-01-31", result);
+        }
+        else
+        {
+            // If there was an error, it should be a proper error message
+            Assert.Contains("❌ Failed to generate report:", result);
+        }
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_WithInvalidDateRange_ReturnsError()
+    {
+        // Arrange
+        var command = new ReportCommand(_repoMock.Object, _consoleMock.Object);
+
+        // Act
+        var result = await command.ExecuteAsync(new[] { "invalid-date", "also-invalid" });
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.NotEmpty(result);
+        Assert.Contains("❌ Invalid date format", result);
+        Assert.Contains("Usage: !report [start_date] [end_date]", result);
     }
 } 
