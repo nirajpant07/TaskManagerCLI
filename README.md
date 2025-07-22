@@ -108,9 +108,10 @@ TaskManagerCLI.exe "!stats"
 ```
 
 ### Exit Workflow (Windows Popup)
-- When you exit the app (using `!exit` or Ctrl+C), a Windows popup will ask if you want to end your workday.
-- If you choose **Yes**, you will be prompted for each active task to complete, pause for next day, or skip.
-- If you choose **No**, a goodbye popup will appear and auto-close after 5 seconds.
+- When you exit the app (using `!exit` or Ctrl+C) **during an active workday**, a Windows popup will ask if you want to end your workday.
+    - If you choose **Yes**, you will be prompted for each active task to complete, pause for next day, or skip. The workday is ended, data is backed up, and a summary is shown.
+    - If you choose **No**, a goodbye popup will appear and auto-close after 5 seconds.
+- If you exit when **no workday is active**, only the goodbye popup appears.
 - **Note:** Due to Windows limitations, the goodbye popup is only reliably shown on `!exit` or Ctrl+C, not when closing the console window with the X button.
 
 ## 📖 Available Commands

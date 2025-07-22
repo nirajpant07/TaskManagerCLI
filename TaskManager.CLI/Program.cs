@@ -10,6 +10,11 @@ namespace TaskManager.CLI;
 
 internal class Program
 {
+    private static bool exitHandled = false;
+    private static IWorkDayManagerService? workDayManager;
+    private static ITaskRepository? repository;
+    private static TaskManagerService? taskManager;
+
     [STAThread]
     private static async Task Main(string[] args)
     {
@@ -22,70 +27,13 @@ internal class Program
         Application.SetCompatibleTextRenderingDefault(false);
 
         var host = CreateHostBuilder(args).Build();
-        var taskManager = host.Services.GetRequiredService<TaskManagerService>();
-        var workDayManager = host.Services.GetRequiredService<IWorkDayManagerService>();
-        var repository = host.Services.GetRequiredService<ITaskRepository>();
+        taskManager = host.Services.GetRequiredService<TaskManagerService>();
+        workDayManager = host.Services.GetRequiredService<IWorkDayManagerService>();
+        repository = host.Services.GetRequiredService<ITaskRepository>();
         var focusSessionManager = host.Services.GetRequiredService<IFocusSessionManagerService>();
 
-        bool exitHandled = false;
-        async void HandleExit()
-        {
-            if (exitHandled) return;
-            exitHandled = true;
-
-            // Check if workday is active
-            bool isWorkDayActive = false;
-            try { isWorkDayActive = await workDayManager.IsWorkDayActiveAsync(); } catch { }
-
-            if (isWorkDayActive)
-            {
-                var endWorkday = WindowsPopupHelper.ShowEndWorkdayDialog();
-                if (endWorkday)
-                {
-                    // Get all active tasks (InProgress or IsFocused)
-                    var tasks = await repository.GetAllTasksAsync();
-                    var activeTasks = tasks.Where(t => (t.Status == TaskManager.CLI.Models.TaskStatus.InProgress || t.IsFocused) && t.Status != TaskManager.CLI.Models.TaskStatus.Completed && t.Status != TaskManager.CLI.Models.TaskStatus.Deleted).ToList();
-                    foreach (var task in activeTasks)
-                    {
-                        string action = WindowsPopupHelper.ShowTaskActionDialog(task.Description);
-                        if (action == "complete")
-                        {
-                            task.Status = TaskManager.CLI.Models.TaskStatus.Completed;
-                            task.CompletedAt = DateTime.UtcNow;
-                            task.IsFocused = false;
-                            await repository.UpdateTaskAsync(task);
-                        }
-                        else if (action == "pause")
-                        {
-                            task.Status = TaskManager.CLI.Models.TaskStatus.Paused;
-                            task.PausedAt = DateTime.UtcNow;
-                            task.PauseReason = "Paused for next day";
-                            task.IsFocused = false;
-                            await repository.UpdateTaskAsync(task);
-                        }
-                        // If skip, do nothing
-                    }
-                    await repository.SaveAsync();
-                    // End the workday
-                    try { await workDayManager.EndWorkDayAsync(); } catch { }
-                }
-                else
-                {
-                    WindowsPopupHelper.ShowGoodbyeMessageWithTimer(5);
-                }
-            }
-            else
-            {
-                WindowsPopupHelper.ShowGoodbyeMessageWithTimer(5);
-            }
-
-            // Log application end
-            await taskManager.LogApplicationEndAsync();
-        }
-
-        // Attach to both exit events
-        AppDomain.CurrentDomain.ProcessExit += (s, e) => HandleExit();
-        Console.CancelKeyPress += (s, e) => { HandleExit(); e.Cancel = false; };
+        AppDomain.CurrentDomain.ProcessExit += (s, e) => HandleExit().GetAwaiter().GetResult();
+        Console.CancelKeyPress += (s, e) => { HandleExit().GetAwaiter().GetResult(); e.Cancel = false; };
 
         try
         {
@@ -99,6 +47,8 @@ internal class Program
             {
                 // Interactive mode
                 await taskManager.RunInteractiveAsync();
+                // After loop breaks (e.g., !exit), explicitly call exit logic
+                await HandleExit();
             }
         }
         finally
@@ -106,9 +56,66 @@ internal class Program
             // Ensure exit logic runs if not already handled
             if (!exitHandled)
             {
-                await Task.Run(() => HandleExit());
+                await HandleExit();
             }
         }
+    }
+
+    public static async Task HandleExit()
+    {
+        if (exitHandled) return;
+        exitHandled = true;
+        if (workDayManager == null || repository == null || taskManager == null)
+            return;
+
+        // Check if workday is active
+        bool isWorkDayActive = false;
+        try { isWorkDayActive = await workDayManager.IsWorkDayActiveAsync(); } catch { }
+
+        if (isWorkDayActive)
+        {
+            var endWorkday = WindowsPopupHelper.ShowEndWorkdayDialog();
+            if (endWorkday)
+            {
+                // Get all active tasks (InProgress or IsFocused)
+                var tasks = await repository.GetAllTasksAsync();
+                var activeTasks = tasks.Where(t => (t.Status == TaskManager.CLI.Models.TaskStatus.InProgress || t.IsFocused) && t.Status != TaskManager.CLI.Models.TaskStatus.Completed && t.Status != TaskManager.CLI.Models.TaskStatus.Deleted).ToList();
+                foreach (var task in activeTasks)
+                {
+                    string action = WindowsPopupHelper.ShowTaskActionDialog(task.Description);
+                    if (action == "complete")
+                    {
+                        task.Status = TaskManager.CLI.Models.TaskStatus.Completed;
+                        task.CompletedAt = DateTime.UtcNow;
+                        task.IsFocused = false;
+                        await repository.UpdateTaskAsync(task);
+                    }
+                    else if (action == "pause")
+                    {
+                        task.Status = TaskManager.CLI.Models.TaskStatus.Paused;
+                        task.PausedAt = DateTime.UtcNow;
+                        task.PauseReason = "Paused for next day";
+                        task.IsFocused = false;
+                        await repository.UpdateTaskAsync(task);
+                    }
+                    // If skip, do nothing
+                }
+                await repository.SaveAsync();
+                // End the workday
+                try { await workDayManager.EndWorkDayAsync(); } catch { }
+            }
+            else
+            {
+                WindowsPopupHelper.ShowGoodbyeMessageWithTimer(5);
+            }
+        }
+        else
+        {
+            WindowsPopupHelper.ShowGoodbyeMessageWithTimer(5);
+        }
+
+        // Log application end
+        await taskManager.LogApplicationEndAsync();
     }
 
     private static IHostBuilder CreateHostBuilder(string[] args) =>

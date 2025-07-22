@@ -90,12 +90,13 @@ TaskManagerCLI is a Windows-based command-line productivity tool for managing ta
 ---
 
 ## Exit Workflow (Popups)
-- When you exit (using `!exit` or Ctrl+C), a Windows popup will ask if you want to end your workday.
-- If you choose **Yes**:
-  - For each active task, you can choose to complete, pause for next day, or skip.
-  - The workday is ended, data is backed up, and a summary is shown.
-- If you choose **No**:
-  - A goodbye popup appears and auto-closes after 5 seconds.
+- When you exit (using `!exit` or Ctrl+C) **during an active workday**, a Windows popup will ask if you want to end your workday.
+    - If you choose **Yes**:
+      - For each active task, you can choose to complete, pause for next day, or skip.
+      - The workday is ended, data is backed up, and a summary is shown.
+    - If you choose **No**:
+      - A goodbye popup appears and auto-closes after 5 seconds.
+- If you exit when **no workday is active**, only the goodbye popup appears.
 - **Note:** The goodbye popup is only reliably shown on `!exit` or Ctrl+C, not when closing the console window with the X button.
 
 ---
@@ -111,7 +112,8 @@ TaskManagerCLI is a Windows-based command-line productivity tool for managing ta
 ---
 
 ## Best Practices
-- **Start your day** with `!startday` and end with `!endday` or `!exit`
+- **Start your day** with `!startday` to enable the full exit workflow and ensure your workday is tracked.
+- **End your day** with `!endday` or `!exit` for proper backup and summary popups.
 - **Add all tasks** at the start, then focus on one at a time
 - **Use `!focus next`** to move through your list
 - **Take breaks** when prompted for optimal productivity
@@ -122,6 +124,7 @@ TaskManagerCLI is a Windows-based command-line productivity tool for managing ta
 ---
 
 ## Troubleshooting & Tips
+- If you only see the goodbye popup when exiting, it means no workday is active. Use `!startday` to begin a workday before exiting to trigger the full workflow.
 - If Excel file is locked, close Excel before running the app
 - If notifications or sounds don't work, check Windows settings
 - If the goodbye popup doesn't show on X button, use `!exit` or Ctrl+C
