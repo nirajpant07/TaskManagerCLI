@@ -58,7 +58,7 @@ namespace TaskManager.CLI.Repositories
             var taskSheet = package.Workbook.Worksheets["Tasks"];
             if (taskSheet?.Dimension == null) return;
 
-            for (int row = 6; row <= taskSheet.Dimension.End.Row; row++)
+            for (int row = 7; row <= taskSheet.Dimension.End.Row; row++) // Data starts from row 7
             {
                 Guid id;
                 var idCell = taskSheet.Cells[row, 1].Value?.ToString();
@@ -144,22 +144,30 @@ namespace TaskManager.CLI.Repositories
 
             for (int row = 7; row <= workDaySheet.Dimension.End.Row; row++)
             {
-                Guid id;
-                var idCell = workDaySheet.Cells[row, 1].Value?.ToString();
-                if (string.IsNullOrEmpty(idCell) || !Guid.TryParse(idCell, out id))
+                // Use Work Date (column 1) as the unique identifier
+                var dateCell = workDaySheet.Cells[row, 1].Value?.ToString();
+                if (!DateTime.TryParse(dateCell, out var workDate))
+                    continue;
+
+                DateTime? startTime = DateTime.TryParse(workDaySheet.Cells[row, 2].Value?.ToString(), out var st) ? st : (DateTime?)null;
+                DateTime? endTime = DateTime.TryParse(workDaySheet.Cells[row, 3].Value?.ToString(), out var et) ? et : (DateTime?)null;
+                string plannedDurationStr = workDaySheet.Cells[row, 4].Value?.ToString() ?? "08:30:00";
+                TimeSpan plannedDuration;
+                if (!TimeSpan.TryParse(plannedDurationStr, out plannedDuration))
                 {
-                    id = Guid.NewGuid();
-                    workDaySheet.Cells[row, 1].Value = id; // Write back to Excel
+                    plannedDuration = TimeSpan.FromHours(8.5); // fallback default
                 }
+                bool isActive = false;
+                bool.TryParse(workDaySheet.Cells[row, 5].Value?.ToString(), out isActive);
 
                 var workDay = new WorkDay
                 {
-                    Id = id,
-                    Date = DateTime.Parse(workDaySheet.Cells[row, 2].Value?.ToString() ?? DateTime.UtcNow.ToString()),
-                    StartTime = DateTime.Parse(workDaySheet.Cells[row, 3].Value?.ToString() ?? DateTime.UtcNow.ToString()),
-                    EndTime = DateTime.TryParse(workDaySheet.Cells[row, 4].Value?.ToString(), out var endTime) ? endTime : null,
-                    PlannedDuration = TimeSpan.Parse(workDaySheet.Cells[row, 5].Value?.ToString() ?? "08:30:00"),
-                    IsActive = bool.Parse(workDaySheet.Cells[row, 6].Value?.ToString() ?? "false")
+                    Id = Guid.NewGuid(), // Internal use only
+                    Date = workDate,
+                    StartTime = startTime ?? workDate,
+                    EndTime = endTime,
+                    PlannedDuration = plannedDuration,
+                    IsActive = isActive
                 };
                 _workDays.Add(workDay);
             }
@@ -186,9 +194,9 @@ namespace TaskManager.CLI.Repositories
                     Date = DateTime.Parse(logSheet.Cells[row, 2].Value?.ToString() ?? DateTime.UtcNow.ToString()),
                     StartTime = DateTime.Parse(logSheet.Cells[row, 3].Value?.ToString() ?? DateTime.UtcNow.ToString()),
                     EndTime = DateTime.TryParse(logSheet.Cells[row, 4].Value?.ToString(), out var endTime) ? endTime : null,
-                    Type = Enum.Parse<SessionType>(logSheet.Cells[row, 5].Value?.ToString() ?? "Focus"),
-                    TaskId = Guid.TryParse(logSheet.Cells[row, 6].Value?.ToString(), out var taskId) ? taskId : null,
-                    Notes = logSheet.Cells[row, 7].Value?.ToString() ?? ""
+                    Type = Enum.Parse<SessionType>(logSheet.Cells[row, 4].Value?.ToString() ?? "Focus"), // <-- FIX: should be column 4
+                    TaskId = Guid.TryParse(logSheet.Cells[row, 5].Value?.ToString(), out var taskId) ? taskId : null, // <-- FIX: should be column 5
+                    Notes = logSheet.Cells[row, 6].Value?.ToString() ?? "" // <-- FIX: should be column 6
                 };
                 _sessionLogs.Add(log);
             }
@@ -370,7 +378,7 @@ namespace TaskManager.CLI.Repositories
             // Add data type descriptions
             var dataTypes = new string[]
             {
-                "Guid", "DateTime", "DateTime", "TimeSpan", "Boolean"
+                "Date", "DateTime", "DateTime", "TimeSpan", "Boolean"
             };
 
             for (int i = 0; i < dataTypes.Length; i++)
@@ -818,17 +826,42 @@ namespace TaskManager.CLI.Repositories
         public Task<WorkDay?> GetTodayWorkDayAsync()
         {
             var today = DateTime.UtcNow.Date;
-            return Task.FromResult(_workDays.FirstOrDefault(w => w.Date == today));
+            var workDay = _workDays.Where(w => w.Date.Date == today).OrderByDescending(w => w.StartTime).FirstOrDefault();
+            return Task.FromResult(workDay);
         }
 
         public async Task<WorkDay> StartWorkDayAsync()
         {
+            return await StartWorkDayAsync(false);
+        }
+
+        public async Task<WorkDay> EndWorkDayAsync()
+        {
             var today = DateTime.UtcNow.Date;
-            var existingWorkDay = _workDays.FirstOrDefault(w => w.Date == today);
+            var workDay = _workDays.Where(w => w.Date.Date == today).OrderByDescending(w => w.StartTime).FirstOrDefault();
+
+            if (workDay != null)
+            {
+                workDay.EndTime = DateTime.UtcNow;
+                workDay.IsActive = false;
+            }
+
+            return workDay ?? new WorkDay { Date = today, EndTime = DateTime.UtcNow };
+        }
+
+        public async Task<WorkDay> StartWorkDayAsync(bool overrideDuplicate)
+        {
+            var today = DateTime.UtcNow.Date;
+            var existingWorkDay = _workDays.Where(w => w.Date == today).OrderByDescending(w => w.StartTime).FirstOrDefault();
 
             if (existingWorkDay != null && existingWorkDay.IsActive)
             {
                 return existingWorkDay;
+            }
+
+            if (!overrideDuplicate && WorkDayExists(today))
+            {
+                throw new InvalidOperationException($"A workday for {today:yyyy-MM-dd} already exists in the main file or archive.");
             }
 
             var workDay = new WorkDay
@@ -840,45 +873,15 @@ namespace TaskManager.CLI.Repositories
                 PlannedDuration = TimeSpan.FromHours(8.5)
             };
 
-            if (existingWorkDay != null)
-            {
-                var index = _workDays.IndexOf(existingWorkDay);
-                _workDays[index] = workDay;
-            }
-            else
-            {
-                _workDays.Add(workDay);
-            }
-
+            _workDays.Add(workDay);
             return workDay;
-        }
-
-        public async Task<WorkDay> EndWorkDayAsync()
-        {
-            var today = DateTime.UtcNow.Date;
-            var workDay = _workDays.FirstOrDefault(w => w.Date == today);
-
-            if (workDay != null)
-            {
-                workDay.EndTime = DateTime.UtcNow;
-                workDay.IsActive = false;
-            }
-
-            return workDay ?? new WorkDay { Date = today, EndTime = DateTime.UtcNow };
         }
 
         public Task UpdateWorkDayAsync(WorkDay workDay)
         {
-            var existing = _workDays.FirstOrDefault(w => w.Date == workDay.Date);
-            if (existing != null)
-            {
-                var index = _workDays.IndexOf(existing);
-                _workDays[index] = workDay;
-            }
-            else
-            {
-                _workDays.Add(workDay);
-            }
+            // Remove all previous entries for this date, keep only the latest
+            _workDays.RemoveAll(w => w.Date.Date == workDay.Date.Date);
+            _workDays.Add(workDay);
             return Task.CompletedTask;
         }
 
@@ -1099,12 +1102,18 @@ namespace TaskManager.CLI.Repositories
                 workDaySheet.Cells[7, 1, workDaySheet.Dimension.End.Row, 5].Clear();
             }
 
-            // Write work day data starting from row 7
-            for (int i = 0; i < _workDays.Count; i++)
+            // Group by date and only keep the latest entry for each date
+            var latestWorkDays = _workDays
+                .GroupBy(w => w.Date.Date)
+                .Select(g => g.OrderByDescending(w => w.StartTime).First())
+                .OrderBy(w => w.Date)
+                .ToList();
+
+            for (int i = 0; i < latestWorkDays.Count; i++)
             {
-                var workDay = _workDays[i];
+                var workDay = latestWorkDays[i];
                 var row = i + 7;
-                workDaySheet.Cells[row, 1].Value = workDay.Id;
+                workDaySheet.Cells[row, 1].Value = workDay.Date.ToString("yyyy-MM-dd");
                 workDaySheet.Cells[row, 2].Value = workDay.StartTime.ToString("yyyy-MM-dd HH:mm:ss");
                 workDaySheet.Cells[row, 3].Value = workDay.EndTime?.ToString("yyyy-MM-dd HH:mm:ss");
                 workDaySheet.Cells[row, 4].Value = workDay.PlannedDuration.ToString();
@@ -1170,6 +1179,29 @@ namespace TaskManager.CLI.Repositories
                         break;
                 }
             }
+        }
+
+        // Helper to check for duplicate workday in main and archive
+        private bool WorkDayExists(DateTime date)
+        {
+            // Check in-memory
+            if (_workDays.Any(w => w.Date.Date == date.Date))
+                return true;
+            // Check archive
+            var archiveFiles = Directory.GetFiles(_archivePath, "*.xlsx", SearchOption.AllDirectories);
+            foreach (var file in archiveFiles)
+            {
+                using var package = new ExcelPackage(new FileInfo(file));
+                var sheet = package.Workbook.Worksheets["WorkDays"];
+                if (sheet?.Dimension == null) continue;
+                for (int row = 7; row <= sheet.Dimension.End.Row; row++)
+                {
+                    var dateCell = sheet.Cells[row, 1].Value?.ToString();
+                    if (DateTime.TryParse(dateCell, out var workDate) && workDate.Date == date.Date)
+                        return true;
+                }
+            }
+            return false;
         }
     }
 }

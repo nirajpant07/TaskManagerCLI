@@ -40,7 +40,7 @@ namespace TaskManager.CLI.Commands.Implementations
                 currentTask.IsFocused = false;
                 await _repository.UpdateTaskAsync(currentTask);
 
-                previousTaskInfo = $"Task {currentTask.Id} ({currentTask.Description}) set to break status.";
+                previousTaskInfo = $"Task {currentTask.Id} ({currentTask.Description}) set to break status.\n🔄 Use '!focus next <alias>' to resume this task later.";
             }
 
             // Start break session

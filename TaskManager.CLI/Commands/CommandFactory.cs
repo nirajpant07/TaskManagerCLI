@@ -64,14 +64,14 @@ namespace TaskManager.CLI.Commands
 
             sb.AppendLine("🔨 Task Management:");
             sb.AppendLine("  !task <description>     - Add new task(s) (comma-separated)");
-            sb.AppendLine("  !edit <id> <description> - Edit task description");
-            sb.AppendLine("  !done <id>              - Mark task as completed");
-            sb.AppendLine("  !delete <id>            - Delete task");
+            sb.AppendLine("  !edit <task_id|alias> <description> - Edit task description");
+            sb.AppendLine("  !done <task_id|alias>   - Mark task as completed");
+            sb.AppendLine("  !delete <task_id|alias> - Delete task");
             sb.AppendLine();
 
             sb.AppendLine("🎯 Focus & Break Management:");
             sb.AppendLine("  !focus                  - Show current focused task");
-            sb.AppendLine("  !focus next [id]        - Start focusing on task");
+            sb.AppendLine("  !focus next [task_id|alias] - Start focusing on task");
             sb.AppendLine("  !break                  - Start break session");
             sb.AppendLine("  !pause [reason]         - Pause current task");
             sb.AppendLine();
@@ -83,7 +83,7 @@ namespace TaskManager.CLI.Commands
             sb.AppendLine();
 
             sb.AppendLine("📊 Information & Settings:");
-            sb.AppendLine("  !check                 - List all tasks");
+            sb.AppendLine("  !check                 - List all tasks (shows both alias and GUID)");
             sb.AppendLine("  !timer <focus>/<break> - Set timer (e.g., !timer 25/5)");
             sb.AppendLine("  !uptime                - Show daily focus/break time");
             sb.AppendLine("  !stats                 - Detailed daily statistics");
@@ -102,11 +102,12 @@ namespace TaskManager.CLI.Commands
 
             sb.AppendLine("💡 Examples:");
             sb.AppendLine("  !task Review code, Write tests, Deploy feature");
-            sb.AppendLine("  !focus next 1");
-            sb.AppendLine("  !timer 45/15");
-            sb.AppendLine("  !break");
-            sb.AppendLine("  !report");
-            sb.AppendLine("  !report 2024-01-31");
+            sb.AppendLine("  !done 2                - Mark task with alias 2 as done");
+            sb.AppendLine("  !done 3f2c...          - Mark task with GUID as done");
+            sb.AppendLine("  !focus next 1          - Focus on task with alias 1");
+            sb.AppendLine();
+
+            sb.AppendLine("🔎 Note: You can use either the alias (shown in !check) or the full GUID for any command that requires a task ID.");
 
             return sb.ToString();
         }

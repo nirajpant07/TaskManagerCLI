@@ -37,7 +37,7 @@ namespace TaskManager.CLI.Commands.Implementations
 
             return $"⏸️ Task {currentTask.Id} paused: {currentTask.Description}\n" +
                    $"📝 Reason: {reason}\n" +
-                   $"🔄 Use '!focus next {currentTask.Id}' to resume this task later.";
+                   $"🔄 Use '!focus next {(TaskManager.CLI.Utilities.TaskAliasManager.GetGuidByAlias(1) == currentTask.Id ? 1 : currentTask.Id.ToString().Substring(0, 8))}' to resume this task later.";
         }
     }
 }

@@ -7,6 +7,7 @@ namespace TaskManager.CLI.Services
     public interface IWorkDayManagerService
     {
         Task<WorkDay> StartWorkDayAsync();
+        Task<WorkDay> StartWorkDayAsync(bool overrideDuplicate);
         Task<WorkDay> EndWorkDayAsync();
         Task<TimeSpan?> GetRemainingWorkTimeAsync();
         Task<bool> IsWorkDayActiveAsync();

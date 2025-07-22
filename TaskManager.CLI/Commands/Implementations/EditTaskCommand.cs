@@ -19,15 +19,27 @@ namespace TaskManager.CLI.Commands.Implementations
         {
             if (parameters.Length < 2)
             {
-                return "❌ Please provide task ID and new description.\n💡 Usage: !edit <task_id> <new description>";
+                return "❌ Please provide task ID and new description.\n💡 Usage: !edit <task_id|alias> <new description>";
             }
 
-            if (!Guid.TryParse(parameters[0], out Guid taskId))
+            Guid? taskId = null;
+            if (int.TryParse(parameters[0], out int alias))
             {
-                return "❌ Invalid task ID. Please provide a valid GUID.";
+                var guid = TaskManager.CLI.Utilities.TaskAliasManager.GetGuidByAlias(alias);
+                if (guid.HasValue)
+                    taskId = guid.Value;
+            }
+            else if (Guid.TryParse(parameters[0], out Guid parsedGuid))
+            {
+                taskId = parsedGuid;
             }
 
-            var task = await _repository.GetTaskByIdAsync(taskId);
+            if (!taskId.HasValue)
+            {
+                return "❌ Invalid task ID or alias. Please provide a valid alias or GUID.";
+            }
+
+            var task = await _repository.GetTaskByIdAsync(taskId.Value);
             if (task == null)
             {
                 return $"❌ Task {taskId} not found.";

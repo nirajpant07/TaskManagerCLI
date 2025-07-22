@@ -4,6 +4,7 @@ using TaskManager.CLI.Services;
 using System.Linq;
 using System.Threading.Tasks;
 using TaskStatus = TaskManager.CLI.Models.TaskStatus;
+using TaskManager.CLI.Utilities;
 
 namespace TaskManager.CLI.Commands.Implementations
 {
@@ -37,23 +38,47 @@ namespace TaskManager.CLI.Commands.Implementations
         {
             TaskModel? targetTask = null;
 
-            if (parameters.Length > 1 && Guid.TryParse(parameters[1], out Guid taskId))
+            if (parameters.Length > 1)
             {
-                // Focus on specific task
-                targetTask = await _repository.GetTaskByIdAsync(taskId);
-                if (targetTask == null)
+                // Try alias first
+                if (int.TryParse(parameters[1], out int alias))
                 {
-                    return $"❌ Task {taskId} not found.";
+                    var guid = TaskAliasManager.GetGuidByAlias(alias);
+                    if (guid.HasValue)
+                    {
+                        targetTask = await _repository.GetTaskByIdAsync(guid.Value);
+                        if (targetTask == null)
+                        {
+                            return $"❌ Task with alias {alias} not found.";
+                        }
+                    }
+                    else
+                    {
+                        return $"❌ Alias {alias} does not correspond to any task. Use !check to see available aliases.";
+                    }
+                }
+                // Try GUID
+                else if (Guid.TryParse(parameters[1], out Guid taskId))
+                {
+                    targetTask = await _repository.GetTaskByIdAsync(taskId);
+                    if (targetTask == null)
+                    {
+                        return $"❌ Task {taskId} not found.";
+                    }
+                }
+                else
+                {
+                    return $"❌ '{parameters[1]}' is not a valid alias or GUID. Use !check to see available aliases.";
                 }
 
                 if (targetTask.Status == TaskStatus.Completed)
                 {
-                    return $"⚠️ Task {taskId} is already completed. Use !done to mark tasks complete.";
+                    return $"⚠️ Task {parameters[1]} is already completed. Use !done to mark tasks complete.";
                 }
 
                 if (targetTask.Status == TaskStatus.Deleted)
                 {
-                    return $"❌ Task {taskId} has been deleted.";
+                    return $"❌ Task {parameters[1]} has been deleted.";
                 }
             }
             else

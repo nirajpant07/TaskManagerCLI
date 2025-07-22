@@ -21,7 +21,7 @@ namespace TaskManager.CLI.Commands.Implementations
         {
             if (parameters.Length == 0)
             {
-                return "❌ Please provide task ID(s).\n💡 Usage: !done <task_id> or !done <id1>, <id2>, <id3>";
+                return "❌ Please provide task ID(s).\n💡 Usage: !done <task_id|alias> or !done <id1|alias1>, <id2|alias2>, ...";
             }
 
             var taskIdsStr = string.Join(" ", parameters).Replace(",", " ");
@@ -32,22 +32,34 @@ namespace TaskManager.CLI.Commands.Implementations
 
             foreach (var idStr in taskIdParts)
             {
-                if (!Guid.TryParse(idStr, out Guid taskId))
+                Guid? taskId = null;
+                if (int.TryParse(idStr, out int alias))
                 {
-                    results.Add($"❌ Invalid task ID: {idStr}");
+                    var guid = TaskManager.CLI.Utilities.TaskAliasManager.GetGuidByAlias(alias);
+                    if (guid.HasValue)
+                        taskId = guid.Value;
+                }
+                else if (Guid.TryParse(idStr, out Guid parsedGuid))
+                {
+                    taskId = parsedGuid;
+                }
+
+                if (!taskId.HasValue)
+                {
+                    results.Add($"❌ Invalid task ID or alias: {idStr}");
                     continue;
                 }
 
-                var task = await _repository.GetTaskByIdAsync(taskId);
+                var task = await _repository.GetTaskByIdAsync(taskId.Value);
                 if (task == null)
                 {
-                    results.Add($"❌ Task {taskId} not found");
+                    results.Add($"❌ Task {idStr} not found");
                     continue;
                 }
 
                 if (task.Status == Models.TaskStatus.Completed)
                 {
-                    results.Add($"⚠️ Task {taskId} already completed");
+                    results.Add($"⚠️ Task {idStr} already completed");
                     continue;
                 }
 
@@ -62,7 +74,7 @@ namespace TaskManager.CLI.Commands.Implementations
                 task.CompletedAt = DateTime.UtcNow;
                 await _repository.UpdateTaskAsync(task);
 
-                results.Add($"✅ Task {taskId} completed: {task.Description}");
+                results.Add($"✅ Task {idStr} completed: {task.Description}");
                 completedCount++;
             }
 

@@ -19,7 +19,7 @@ namespace TaskManager.CLI.Commands.Implementations
         {
             if (parameters.Length == 0)
             {
-                return "❌ Please provide task ID(s).\n💡 Usage: !delete <task_id> or !delete <id1>, <id2>, <id3>";
+                return "❌ Please provide task ID(s).\n💡 Usage: !delete <task_id|alias> or !delete <id1|alias1>, <id2|alias2>, ...";
             }
 
             var taskIdsStr = string.Join(" ", parameters).Replace(",", " ");
@@ -30,21 +30,33 @@ namespace TaskManager.CLI.Commands.Implementations
 
             foreach (var idStr in taskIdParts)
             {
-                if (!Guid.TryParse(idStr, out Guid taskId))
+                Guid? taskId = null;
+                if (int.TryParse(idStr, out int alias))
                 {
-                    results.Add($"❌ Invalid task ID: {idStr}");
+                    var guid = TaskManager.CLI.Utilities.TaskAliasManager.GetGuidByAlias(alias);
+                    if (guid.HasValue)
+                        taskId = guid.Value;
+                }
+                else if (Guid.TryParse(idStr, out Guid parsedGuid))
+                {
+                    taskId = parsedGuid;
+                }
+
+                if (!taskId.HasValue)
+                {
+                    results.Add($"❌ Invalid task ID or alias: {idStr}");
                     continue;
                 }
 
-                var task = await _repository.GetTaskByIdAsync(taskId);
+                var task = await _repository.GetTaskByIdAsync(taskId.Value);
                 if (task == null)
                 {
-                    results.Add($"❌ Task {taskId} not found");
+                    results.Add($"❌ Task {idStr} not found");
                     continue;
                 }
 
-                await _repository.DeleteTaskAsync(taskId);
-                results.Add($"🗑️ Task {taskId} deleted: {task.Description}");
+                await _repository.DeleteTaskAsync(taskId.Value);
+                results.Add($"🗑️ Task {idStr} deleted: {task.Description}");
                 deletedCount++;
             }
 

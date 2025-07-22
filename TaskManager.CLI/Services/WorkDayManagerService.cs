@@ -28,7 +28,12 @@ namespace TaskManager.CLI.Services
 
         public async Task<WorkDay> StartWorkDayAsync()
         {
-            var workDay = await _repository.StartWorkDayAsync();
+            return await StartWorkDayAsync(false);
+        }
+
+        public async Task<WorkDay> StartWorkDayAsync(bool overrideDuplicate)
+        {
+            var workDay = await _repository.StartWorkDayAsync(overrideDuplicate);
             var session = await _repository.GetTodaySessionAsync();
             session.DayStartTime = workDay.StartTime;
             session.IsWorkDayActive = true;

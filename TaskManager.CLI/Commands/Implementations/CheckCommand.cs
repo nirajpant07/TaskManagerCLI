@@ -30,62 +30,52 @@ namespace TaskManager.CLI.Commands.Implementations
                 return "📋 No active tasks found.\n💡 Add tasks with '!task <description>' to get started!";
             }
 
-            var sb = new StringBuilder();
-            sb.AppendLine($"📋 Your Tasks ({activeTasks.Count} active):\n");
+            // Assign aliases and update alias manager
+            var orderedTasks = activeTasks.OrderBy(t => t.CreatedAt).ToList();
+            TaskAliasManager.SetAliases(orderedTasks.Select(t => t.Id).ToList());
 
-            var pendingTasks = activeTasks.Where(t => t.Status == TaskStatus.Pending).ToList();
-            var inProgressTasks = activeTasks.Where(t => t.Status == TaskStatus.InProgress).ToList();
-            var pausedTasks = activeTasks.Where(t => t.Status == TaskStatus.Paused).ToList();
-            var onBreakTasks = activeTasks.Where(t => t.Status == TaskStatus.OnBreak).ToList();
-
-            if (inProgressTasks.Any())
+            // Prepare table data
+            var headers = new[] { "Alias", "Description", "Status", "Focused", "Focus Time", "GUID" };
+            var rows = new string[orderedTasks.Count][];
+            for (int i = 0; i < orderedTasks.Count; i++)
             {
-                sb.AppendLine("🎯 In Progress:");
-                foreach (var task in inProgressTasks.OrderBy(t => t.CreatedAt))
+                var task = orderedTasks[i];
+                string statusIcon = task.Status switch
                 {
-                    var focusIcon = task.IsFocused ? "👁️ " : "";
-                    var timeInfo = task.FocusTime > TimeSpan.Zero ? $" [{task.FocusTime:hh\\:mm\\:ss}]" : "";
-                    sb.AppendLine($"   {focusIcon}{task.Id} - {task.Description}{timeInfo}");
-                }
-                sb.AppendLine();
+                    TaskStatus.InProgress => "🎯",
+                    TaskStatus.Pending => "📝",
+                    TaskStatus.Paused => "⏸️",
+                    TaskStatus.OnBreak => "☕",
+                    TaskStatus.Completed => "✅",
+                    _ => ""
+                };
+                string focusedIcon = task.IsFocused ? "👁️" : "";
+                rows[i] = new[]
+                {
+                    (i + 1).ToString(),
+                    task.Description,
+                    $"{statusIcon} {task.Status}",
+                    focusedIcon,
+                    task.FocusTime > TimeSpan.Zero ? task.FocusTime.ToString(@"hh\:mm\:ss") : "-",
+                    task.Id.ToString()
+                };
             }
 
-            if (onBreakTasks.Any())
-            {
-                sb.AppendLine("☕ On Break:");
-                foreach (var task in onBreakTasks.OrderBy(t => t.CreatedAt))
-                {
-                    var timeInfo = task.FocusTime > TimeSpan.Zero ? $" [{task.FocusTime:hh\\:mm\\:ss}]" : "";
-                    sb.AppendLine($"   {task.Id} - {task.Description}{timeInfo}");
-                }
-                sb.AppendLine();
-            }
+            // Output table
+            _console.WriteHeader($"📋 Your Tasks ({orderedTasks.Count} active)");
+            _console.WriteTable(headers, rows);
+            _console.WriteLine();
+            _console.WriteInfo("💡 Use '!focus next' to start working or '!focus next <alias>' for a specific task");
 
-            if (pausedTasks.Any())
-            {
-                sb.AppendLine("⏸️ Paused:");
-                foreach (var task in pausedTasks.OrderBy(t => t.CreatedAt))
-                {
-                    var timeInfo = task.FocusTime > TimeSpan.Zero ? $" [{task.FocusTime:hh\\:mm\\:ss}]" : "";
-                    var pauseInfo = !string.IsNullOrEmpty(task.PauseReason) ? $" - {task.PauseReason}" : "";
-                    sb.AppendLine($"   {task.Id} - {task.Description}{timeInfo}{pauseInfo}");
-                }
-                sb.AppendLine();
-            }
+            // Add summary by status
+            var statusGroups = orderedTasks.GroupBy(t => t.Status)
+                .Select(g => $"{g.Key}: {g.Count()}")
+                .ToList();
+            _console.WriteLine();
+            _console.WriteHighlight("Summary by Status:");
+            _console.WriteLine(string.Join(" | ", statusGroups));
 
-            if (pendingTasks.Any())
-            {
-                sb.AppendLine("📝 Pending:");
-                foreach (var task in pendingTasks.OrderBy(t => t.CreatedAt))
-                {
-                    sb.AppendLine($"   {task.Id} - {task.Description}");
-                }
-                sb.AppendLine();
-            }
-
-            sb.AppendLine($"💡 Use '!focus next' to start working or '!focus next <id>' for specific task");
-
-            return sb.ToString().TrimEnd();
+            return string.Empty;
         }
     }
 }

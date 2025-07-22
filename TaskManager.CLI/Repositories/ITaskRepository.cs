@@ -22,6 +22,8 @@ public interface ITaskRepository
 
     Task<WorkDay> StartWorkDayAsync();
 
+    Task<WorkDay> StartWorkDayAsync(bool overrideDuplicate);
+
     Task<WorkDay> EndWorkDayAsync();
 
     Task UpdateWorkDayAsync(WorkDay workDay);
