@@ -9,7 +9,7 @@ graph TB
     subgraph "Presentation Layer"
         CLI[Console Interface]
         UI[Windows Forms Notifications]
-        POPUP[WindowsPopupHelper\n(Exit Popups)]
+        POPUP[WindowsPopupHelper<br> Exit Popups]
     end
 
     subgraph "Application Layer"
