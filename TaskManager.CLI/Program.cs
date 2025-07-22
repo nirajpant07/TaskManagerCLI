@@ -23,32 +23,75 @@ internal class Program
 
         var host = CreateHostBuilder(args).Build();
         var taskManager = host.Services.GetRequiredService<TaskManagerService>();
+        var workDayManager = host.Services.GetRequiredService<IWorkDayManagerService>();
+        var repository = host.Services.GetRequiredService<ITaskRepository>();
+        var focusSessionManager = host.Services.GetRequiredService<IFocusSessionManagerService>();
 
-        bool appEndLogged = false;
-        void LogAppEndHandler(object? sender, EventArgs e)
+        bool exitHandled = false;
+        async void HandleExit()
         {
-            if (!appEndLogged)
+            if (exitHandled) return;
+            exitHandled = true;
+
+            // Check if workday is active
+            bool isWorkDayActive = false;
+            try { isWorkDayActive = await workDayManager.IsWorkDayActiveAsync(); } catch { }
+
+            if (isWorkDayActive)
             {
-                // Use .GetAwaiter().GetResult() because async/await is not allowed in these handlers
-                taskManager.LogApplicationEndAsync().GetAwaiter().GetResult();
-                appEndLogged = true;
+                var endWorkday = WindowsPopupHelper.ShowEndWorkdayDialog();
+                if (endWorkday)
+                {
+                    // Get all active tasks (InProgress or IsFocused)
+                    var tasks = await repository.GetAllTasksAsync();
+                    var activeTasks = tasks.Where(t => (t.Status == TaskManager.CLI.Models.TaskStatus.InProgress || t.IsFocused) && t.Status != TaskManager.CLI.Models.TaskStatus.Completed && t.Status != TaskManager.CLI.Models.TaskStatus.Deleted).ToList();
+                    foreach (var task in activeTasks)
+                    {
+                        string action = WindowsPopupHelper.ShowTaskActionDialog(task.Description);
+                        if (action == "complete")
+                        {
+                            task.Status = TaskManager.CLI.Models.TaskStatus.Completed;
+                            task.CompletedAt = DateTime.UtcNow;
+                            task.IsFocused = false;
+                            await repository.UpdateTaskAsync(task);
+                        }
+                        else if (action == "pause")
+                        {
+                            task.Status = TaskManager.CLI.Models.TaskStatus.Paused;
+                            task.PausedAt = DateTime.UtcNow;
+                            task.PauseReason = "Paused for next day";
+                            task.IsFocused = false;
+                            await repository.UpdateTaskAsync(task);
+                        }
+                        // If skip, do nothing
+                    }
+                    await repository.SaveAsync();
+                    // End the workday
+                    try { await workDayManager.EndWorkDayAsync(); } catch { }
+                }
+                else
+                {
+                    WindowsPopupHelper.ShowGoodbyeMessageWithTimer(5);
+                }
             }
+            else
+            {
+                WindowsPopupHelper.ShowGoodbyeMessageWithTimer(5);
+            }
+
+            // Log application end
+            await taskManager.LogApplicationEndAsync();
         }
 
-        AppDomain.CurrentDomain.ProcessExit += LogAppEndHandler;
-        Console.CancelKeyPress += (s, e) =>
-        {
-            LogAppEndHandler(s, e);
-            // Allow the process to terminate
-            e.Cancel = false;
-        };
+        // Attach to both exit events
+        AppDomain.CurrentDomain.ProcessExit += (s, e) => HandleExit();
+        Console.CancelKeyPress += (s, e) => { HandleExit(); e.Cancel = false; };
 
         try
         {
             if (args.Length > 0)
             {
                 // Single command execution
-                
                 var command = string.Join(" ", args);
                 await taskManager.ProcessCommandAsync(command);
             }
@@ -60,8 +103,11 @@ internal class Program
         }
         finally
         {
-            // Log application end
-            await taskManager.LogApplicationEndAsync();
+            // Ensure exit logic runs if not already handled
+            if (!exitHandled)
+            {
+                await Task.Run(() => HandleExit());
+            }
         }
     }
 
