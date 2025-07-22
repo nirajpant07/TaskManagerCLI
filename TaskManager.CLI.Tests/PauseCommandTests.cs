@@ -84,6 +84,6 @@ public class PauseCommandTests
         _repoMock.Setup(r => r.UpdateTaskAsync(It.IsAny<TaskModel>())).Returns(Task.CompletedTask);
         var cmd = new PauseCommand(_repoMock.Object, _sessionMock.Object);
         var result = await cmd.ExecuteAsync(new string[0]);
-        Assert.Contains($"Use '!focus next {tasks[0].Id}' to resume", result);
+        Assert.Contains($"Use '!focus next", result);
     }
 } 

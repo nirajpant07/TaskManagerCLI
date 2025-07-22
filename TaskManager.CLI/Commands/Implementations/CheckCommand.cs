@@ -35,7 +35,7 @@ namespace TaskManager.CLI.Commands.Implementations
             TaskAliasManager.SetAliases(orderedTasks.Select(t => t.Id).ToList());
 
             // Prepare table data
-            var headers = new[] { "Alias", "Description", "Status", "Focused", "Focus Time", "GUID" };
+            var headers = new[] { "Alias", "Description", "Status", "Focused", "Focus Time", "Pause Reason", "GUID" };
             var rows = new string[orderedTasks.Count][];
             for (int i = 0; i < orderedTasks.Count; i++)
             {
@@ -50,6 +50,7 @@ namespace TaskManager.CLI.Commands.Implementations
                     _ => ""
                 };
                 string focusedIcon = task.IsFocused ? "👁️" : "";
+                string pauseReason = task.Status == TaskStatus.Paused ? task.PauseReason : "";
                 rows[i] = new[]
                 {
                     (i + 1).ToString(),
@@ -57,6 +58,7 @@ namespace TaskManager.CLI.Commands.Implementations
                     $"{statusIcon} {task.Status}",
                     focusedIcon,
                     task.FocusTime > TimeSpan.Zero ? task.FocusTime.ToString(@"hh\:mm\:ss") : "-",
+                    pauseReason,
                     task.Id.ToString()
                 };
             }
