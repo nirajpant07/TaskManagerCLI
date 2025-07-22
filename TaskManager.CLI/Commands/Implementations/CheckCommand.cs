@@ -41,11 +41,11 @@ namespace TaskManager.CLI.Commands.Implementations
             if (inProgressTasks.Any())
             {
                 sb.AppendLine("🎯 In Progress:");
-                foreach (var task in inProgressTasks.OrderBy(t => t.Id))
+                foreach (var task in inProgressTasks.OrderBy(t => t.CreatedAt))
                 {
                     var focusIcon = task.IsFocused ? "👁️ " : "";
                     var timeInfo = task.FocusTime > TimeSpan.Zero ? $" [{task.FocusTime:hh\\:mm\\:ss}]" : "";
-                    sb.AppendLine($"   {focusIcon}{task.Id}. {task.Description}{timeInfo}");
+                    sb.AppendLine($"   {focusIcon}{task.Id} - {task.Description}{timeInfo}");
                 }
                 sb.AppendLine();
             }
@@ -53,10 +53,10 @@ namespace TaskManager.CLI.Commands.Implementations
             if (onBreakTasks.Any())
             {
                 sb.AppendLine("☕ On Break:");
-                foreach (var task in onBreakTasks.OrderBy(t => t.Id))
+                foreach (var task in onBreakTasks.OrderBy(t => t.CreatedAt))
                 {
                     var timeInfo = task.FocusTime > TimeSpan.Zero ? $" [{task.FocusTime:hh\\:mm\\:ss}]" : "";
-                    sb.AppendLine($"   {task.Id}. {task.Description}{timeInfo}");
+                    sb.AppendLine($"   {task.Id} - {task.Description}{timeInfo}");
                 }
                 sb.AppendLine();
             }
@@ -64,11 +64,11 @@ namespace TaskManager.CLI.Commands.Implementations
             if (pausedTasks.Any())
             {
                 sb.AppendLine("⏸️ Paused:");
-                foreach (var task in pausedTasks.OrderBy(t => t.Id))
+                foreach (var task in pausedTasks.OrderBy(t => t.CreatedAt))
                 {
                     var timeInfo = task.FocusTime > TimeSpan.Zero ? $" [{task.FocusTime:hh\\:mm\\:ss}]" : "";
                     var pauseInfo = !string.IsNullOrEmpty(task.PauseReason) ? $" - {task.PauseReason}" : "";
-                    sb.AppendLine($"   {task.Id}. {task.Description}{timeInfo}{pauseInfo}");
+                    sb.AppendLine($"   {task.Id} - {task.Description}{timeInfo}{pauseInfo}");
                 }
                 sb.AppendLine();
             }
@@ -76,9 +76,9 @@ namespace TaskManager.CLI.Commands.Implementations
             if (pendingTasks.Any())
             {
                 sb.AppendLine("📝 Pending:");
-                foreach (var task in pendingTasks.OrderBy(t => t.Id))
+                foreach (var task in pendingTasks.OrderBy(t => t.CreatedAt))
                 {
-                    sb.AppendLine($"   {task.Id}. {task.Description}");
+                    sb.AppendLine($"   {task.Id} - {task.Description}");
                 }
                 sb.AppendLine();
             }

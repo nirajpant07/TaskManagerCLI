@@ -238,8 +238,8 @@ public class HtmlReportGeneratorTests : IDisposable
         // Arrange
         var tasks = new List<TaskModel>
         {
-            new() { Id = 1, Description = "Test Task 1", Status = Models.TaskStatus.Completed, CreatedAt = DateTime.UtcNow.AddDays(-1) },
-            new() { Id = 2, Description = "Test Task 2", Status = Models.TaskStatus.Pending, CreatedAt = DateTime.UtcNow }
+            new() { Id = Guid.NewGuid(), Description = "Test Task 1", Status = Models.TaskStatus.Completed, CreatedAt = DateTime.UtcNow.AddDays(-1) },
+            new() { Id = Guid.NewGuid(), Description = "Test Task 2", Status = Models.TaskStatus.Pending, CreatedAt = DateTime.UtcNow }
         };
         
         var sessionLogs = new List<SessionLog>

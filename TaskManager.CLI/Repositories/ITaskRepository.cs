@@ -6,13 +6,13 @@ public interface ITaskRepository
 {
     Task<List<TaskModel>> GetAllTasksAsync();
 
-    Task<TaskModel?> GetTaskByIdAsync(int id);
+    Task<TaskModel?> GetTaskByIdAsync(Guid id);
 
-    Task<int> AddTaskAsync(TaskModel task);
+    Task<Guid> AddTaskAsync(TaskModel task);
 
     Task UpdateTaskAsync(TaskModel task);
 
-    Task DeleteTaskAsync(int id);
+    Task DeleteTaskAsync(Guid id);
 
     Task<FocusSession> GetTodaySessionAsync();
 

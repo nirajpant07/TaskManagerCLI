@@ -37,7 +37,7 @@ namespace TaskManager.CLI.Commands.Implementations
         {
             TaskModel? targetTask = null;
 
-            if (parameters.Length > 1 && int.TryParse(parameters[1], out int taskId))
+            if (parameters.Length > 1 && Guid.TryParse(parameters[1], out Guid taskId))
             {
                 // Focus on specific task
                 targetTask = await _repository.GetTaskByIdAsync(taskId);

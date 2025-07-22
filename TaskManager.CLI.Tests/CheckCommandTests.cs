@@ -32,10 +32,10 @@ public class CheckCommandTests
     {
         var tasks = new List<TaskModel>
         {
-            new() { Id = 1, Description = "Task 1", Status = TaskStatus.Pending },
-            new() { Id = 2, Description = "Task 2", Status = TaskStatus.InProgress, IsFocused = true },
-            new() { Id = 3, Description = "Task 3", Status = TaskStatus.Paused, PauseReason = "Lunch" },
-            new() { Id = 4, Description = "Task 4", Status = TaskStatus.OnBreak }
+            new() { Id = Guid.NewGuid(), Description = "Task 1", Status = TaskStatus.Pending },
+            new() { Id = Guid.NewGuid(), Description = "Task 2", Status = TaskStatus.InProgress, IsFocused = true },
+            new() { Id = Guid.NewGuid(), Description = "Task 3", Status = TaskStatus.Paused, PauseReason = "Lunch" },
+            new() { Id = Guid.NewGuid(), Description = "Task 4", Status = TaskStatus.OnBreak }
         };
         _repoMock.Setup(r => r.GetAllTasksAsync()).ReturnsAsync(tasks);
         var cmd = new CheckCommand(_repoMock.Object, _consoleMock.Object);
@@ -51,7 +51,7 @@ public class CheckCommandTests
     {
         var tasks = new List<TaskModel>
         {
-            new() { Id = 1, Description = "Task 1", Status = TaskStatus.InProgress, IsFocused = true }
+            new() { Id = Guid.NewGuid(), Description = "Task 1", Status = TaskStatus.InProgress, IsFocused = true }
         };
         _repoMock.Setup(r => r.GetAllTasksAsync()).ReturnsAsync(tasks);
         var cmd = new CheckCommand(_repoMock.Object, _consoleMock.Object);
@@ -64,7 +64,7 @@ public class CheckCommandTests
     {
         var tasks = new List<TaskModel>
         {
-            new() { Id = 1, Description = "Task 1", Status = TaskStatus.InProgress, FocusTime = TimeSpan.FromMinutes(30) }
+            new() { Id = Guid.NewGuid(), Description = "Task 1", Status = TaskStatus.InProgress, FocusTime = TimeSpan.FromMinutes(30) }
         };
         _repoMock.Setup(r => r.GetAllTasksAsync()).ReturnsAsync(tasks);
         var cmd = new CheckCommand(_repoMock.Object, _consoleMock.Object);
@@ -77,7 +77,7 @@ public class CheckCommandTests
     {
         var tasks = new List<TaskModel>
         {
-            new() { Id = 1, Description = "Task 1", Status = TaskStatus.Paused, PauseReason = "Lunch break" }
+            new() { Id = Guid.NewGuid(), Description = "Task 1", Status = TaskStatus.Paused, PauseReason = "Lunch break" }
         };
         _repoMock.Setup(r => r.GetAllTasksAsync()).ReturnsAsync(tasks);
         var cmd = new CheckCommand(_repoMock.Object, _consoleMock.Object);
@@ -90,9 +90,9 @@ public class CheckCommandTests
     {
         var tasks = new List<TaskModel>
         {
-            new() { Id = 1, Description = "Active", Status = TaskStatus.Pending },
-            new() { Id = 2, Description = "Completed", Status = TaskStatus.Completed },
-            new() { Id = 3, Description = "Deleted", Status = TaskStatus.Deleted }
+            new() { Id = Guid.NewGuid(), Description = "Active", Status = TaskStatus.Pending },
+            new() { Id = Guid.NewGuid(), Description = "Completed", Status = TaskStatus.Completed },
+            new() { Id = Guid.NewGuid(), Description = "Deleted", Status = TaskStatus.Deleted }
         };
         _repoMock.Setup(r => r.GetAllTasksAsync()).ReturnsAsync(tasks);
         var cmd = new CheckCommand(_repoMock.Object, _consoleMock.Object);
@@ -107,7 +107,7 @@ public class CheckCommandTests
     {
         var tasks = new List<TaskModel>
         {
-            new() { Id = 1, Description = "Task 1", Status = TaskStatus.Pending }
+            new() { Id = Guid.NewGuid(), Description = "Task 1", Status = TaskStatus.Pending }
         };
         _repoMock.Setup(r => r.GetAllTasksAsync()).ReturnsAsync(tasks);
         var cmd = new CheckCommand(_repoMock.Object, _consoleMock.Object);

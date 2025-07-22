@@ -1,5 +1,8 @@
 ﻿using TaskManager.CLI.Commands;
 using TaskManager.CLI.Repositories;
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace TaskManager.CLI.Commands.Implementations
 {
@@ -27,7 +30,7 @@ namespace TaskManager.CLI.Commands.Implementations
 
             foreach (var idStr in taskIdParts)
             {
-                if (!int.TryParse(idStr, out int taskId))
+                if (!Guid.TryParse(idStr, out Guid taskId))
                 {
                     results.Add($"❌ Invalid task ID: {idStr}");
                     continue;

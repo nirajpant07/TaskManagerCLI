@@ -18,13 +18,13 @@ public class PauseCommandTests
     [Fact]
     public async Task ExecuteAsync_PausesFocusedTask_ReturnsSuccess()
     {
-        var tasks = new List<TaskModel> { new() { Id = 1, Description = "Test", Status = TaskStatus.InProgress, IsFocused = true } };
+        var tasks = new List<TaskModel> { new() { Id = Guid.NewGuid(), Description = "Test", Status = TaskStatus.InProgress, IsFocused = true } };
         _repoMock.Setup(r => r.GetAllTasksAsync()).ReturnsAsync(tasks);
         _sessionMock.Setup(s => s.PauseCurrentSessionAsync(It.IsAny<string>())).Returns(Task.CompletedTask);
         _repoMock.Setup(r => r.UpdateTaskAsync(It.IsAny<TaskModel>())).Returns(Task.CompletedTask);
         var cmd = new PauseCommand(_repoMock.Object, _sessionMock.Object);
         var result = await cmd.ExecuteAsync(new string[0]);
-        Assert.Contains("Task 1 paused", result);
+        Assert.Contains($"Task {tasks[0].Id} paused", result);
         Assert.Contains("Reason: Manual pause", result);
     }
 
@@ -41,7 +41,7 @@ public class PauseCommandTests
     [Fact]
     public async Task ExecuteAsync_WithCustomReason_IncludesReason()
     {
-        var tasks = new List<TaskModel> { new() { Id = 1, Description = "Test", Status = TaskStatus.InProgress, IsFocused = true } };
+        var tasks = new List<TaskModel> { new() { Id = Guid.NewGuid(), Description = "Test", Status = TaskStatus.InProgress, IsFocused = true } };
         _repoMock.Setup(r => r.GetAllTasksAsync()).ReturnsAsync(tasks);
         _sessionMock.Setup(s => s.PauseCurrentSessionAsync(It.IsAny<string>())).Returns(Task.CompletedTask);
         _repoMock.Setup(r => r.UpdateTaskAsync(It.IsAny<TaskModel>())).Returns(Task.CompletedTask);
@@ -53,7 +53,7 @@ public class PauseCommandTests
     [Fact]
     public async Task ExecuteAsync_WithoutReason_UsesDefault()
     {
-        var tasks = new List<TaskModel> { new() { Id = 1, Description = "Test", Status = TaskStatus.InProgress, IsFocused = true } };
+        var tasks = new List<TaskModel> { new() { Id = Guid.NewGuid(), Description = "Test", Status = TaskStatus.InProgress, IsFocused = true } };
         _repoMock.Setup(r => r.GetAllTasksAsync()).ReturnsAsync(tasks);
         _sessionMock.Setup(s => s.PauseCurrentSessionAsync(It.IsAny<string>())).Returns(Task.CompletedTask);
         _repoMock.Setup(r => r.UpdateTaskAsync(It.IsAny<TaskModel>())).Returns(Task.CompletedTask);
@@ -65,7 +65,7 @@ public class PauseCommandTests
     [Fact]
     public async Task ExecuteAsync_UpdatesTaskStatusToPaused()
     {
-        var task = new TaskModel { Id = 1, Description = "Test", Status = TaskStatus.InProgress, IsFocused = true };
+        var task = new TaskModel { Id = Guid.NewGuid(), Description = "Test", Status = TaskStatus.InProgress, IsFocused = true };
         var tasks = new List<TaskModel> { task };
         _repoMock.Setup(r => r.GetAllTasksAsync()).ReturnsAsync(tasks);
         _sessionMock.Setup(s => s.PauseCurrentSessionAsync(It.IsAny<string>())).Returns(Task.CompletedTask);
@@ -78,12 +78,12 @@ public class PauseCommandTests
     [Fact]
     public async Task ExecuteAsync_IncludesResumeInstructions()
     {
-        var tasks = new List<TaskModel> { new() { Id = 1, Description = "Test", Status = TaskStatus.InProgress, IsFocused = true } };
+        var tasks = new List<TaskModel> { new() { Id = Guid.NewGuid(), Description = "Test", Status = TaskStatus.InProgress, IsFocused = true } };
         _repoMock.Setup(r => r.GetAllTasksAsync()).ReturnsAsync(tasks);
         _sessionMock.Setup(s => s.PauseCurrentSessionAsync(It.IsAny<string>())).Returns(Task.CompletedTask);
         _repoMock.Setup(r => r.UpdateTaskAsync(It.IsAny<TaskModel>())).Returns(Task.CompletedTask);
         var cmd = new PauseCommand(_repoMock.Object, _sessionMock.Object);
         var result = await cmd.ExecuteAsync(new string[0]);
-        Assert.Contains("Use '!focus next 1' to resume", result);
+        Assert.Contains($"Use '!focus next {tasks[0].Id}' to resume", result);
     }
 } 

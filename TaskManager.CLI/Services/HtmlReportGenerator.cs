@@ -34,6 +34,12 @@ namespace TaskManager.CLI.Services
                 var start = startDate ?? DateTime.UtcNow.AddDays(-30);
                 var end = endDate ?? DateTime.UtcNow;
 
+                // Ensure dates are normalized and consistent
+                start = start.Date;
+                end = end.Date;
+
+                Console.WriteLine($"Generating report for date range: {start:yyyy-MM-dd} to {end:yyyy-MM-dd}");
+
                 var reportData = await AnalyzeDataAsync(start, end);
                 var htmlContent = GenerateHtmlContent(reportData, start, end);
 
@@ -41,10 +47,13 @@ namespace TaskManager.CLI.Services
                 var filePath = Path.Combine(_reportsPath, fileName);
 
                 await File.WriteAllTextAsync(filePath, htmlContent, Encoding.UTF8);
+                
+                Console.WriteLine($"Report generated successfully: {filePath}");
                 return filePath;
             }
             catch (Exception ex)
             {
+                Console.WriteLine($"Error generating report: {ex.Message}");
                 throw new Exception($"Failed to generate HTML report: {ex.Message}", ex);
             }
         }
@@ -53,41 +62,131 @@ namespace TaskManager.CLI.Services
         {
             var reportData = new ReportData();
 
+            // Validate date range
+            if (startDate > endDate)
+            {
+                Console.WriteLine($"Warning: Invalid date range - start date ({startDate:yyyy-MM-dd}) is after end date ({endDate:yyyy-MM-dd})");
+                var temp = startDate;
+                startDate = endDate;
+                endDate = temp;
+            }
+
+            // Ensure dates are normalized to start of day
+            startDate = startDate.Date;
+            endDate = endDate.Date;
+
             try
             {
-                // Load current data with error handling
-                var currentTasks = await _repository.GetAllTasksAsync();
-                var currentSessionLogs = await _repository.GetTodaySessionLogsAsync();
-                var currentWorkDay = await _repository.GetTodayWorkDayAsync();
-
-                // Load archived data with comprehensive error handling
-                var archivedData = await LoadArchivedDataAsync(startDate, endDate);
-
-                // Combine current and archived data with validation
-                var allTasks = new List<TaskModel>(currentTasks ?? new List<TaskModel>());
-                var allSessionLogs = new List<SessionLog>(currentSessionLogs ?? new List<SessionLog>());
+                // Load data for the specified date range with proper error handling
+                var allTasks = new List<TaskModel>();
+                var allSessionLogs = new List<SessionLog>();
                 var allWorkDays = new List<WorkDay>();
 
-                if (currentWorkDay != null)
-                    allWorkDays.Add(currentWorkDay);
+                // Load current data and filter by date range
+                try
+                {
+                    var currentTasks = await _repository.GetAllTasksAsync();
+                    if (currentTasks != null)
+                    {
+                        var filteredCurrentTasks = currentTasks
+                            .Where(t => t.CreatedAt.Date >= startDate.Date && t.CreatedAt.Date <= endDate.Date)
+                            .Where(t => t.Status != TaskStatus.Deleted)
+                            .ToList();
+                        allTasks.AddRange(filteredCurrentTasks);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error loading current tasks: {ex.Message}");
+                }
 
+                // Load current session logs (only for today if it's in the date range)
+                try
+                {
+                    if (DateTime.UtcNow.Date >= startDate.Date && DateTime.UtcNow.Date <= endDate.Date)
+                    {
+                        var todaySessions = await _repository.GetTodaySessionLogsAsync();
+                        if (todaySessions != null)
+                        {
+                            allSessionLogs.AddRange(todaySessions);
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error loading current session logs: {ex.Message}");
+                }
+
+                // Load current work day (only for today if it's in the date range)
+                try
+                {
+                    if (DateTime.UtcNow.Date >= startDate.Date && DateTime.UtcNow.Date <= endDate.Date)
+                    {
+                        var currentWorkDay = await _repository.GetTodayWorkDayAsync();
+                        if (currentWorkDay != null)
+                        {
+                            allWorkDays.Add(currentWorkDay);
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error loading current work day: {ex.Message}");
+                }
+
+                // Load archived data for the specified date range
+                var archivedData = await LoadArchivedDataAsync(startDate, endDate);
                 allTasks.AddRange(archivedData.Tasks);
                 allSessionLogs.AddRange(archivedData.SessionLogs);
                 allWorkDays.AddRange(archivedData.WorkDays);
 
-                // Enhanced filtering with proper date range handling
-                var filteredTasks = allTasks
+                // Deduplicate by GUID (keep latest by CreatedAt/Date/StartTime)
+                var taskDict = new Dictionary<Guid, TaskModel>();
+                foreach (var t in allTasks)
+                {
+                    if (t.Id == Guid.Empty) continue;
+                    if (!taskDict.ContainsKey(t.Id) || t.CreatedAt > taskDict[t.Id].CreatedAt)
+                        taskDict[t.Id] = t;
+                }
+                var dedupedTasks = taskDict.Values.ToList();
+
+                var sessionLogDict = new Dictionary<Guid, SessionLog>();
+                foreach (var s in allSessionLogs)
+                {
+                    if (s.Id == Guid.Empty) continue;
+                    if (!sessionLogDict.ContainsKey(s.Id) || s.StartTime > sessionLogDict[s.Id].StartTime)
+                        sessionLogDict[s.Id] = s;
+                }
+                var dedupedSessionLogs = sessionLogDict.Values.ToList();
+
+                var workDayDict = new Dictionary<Guid, WorkDay>();
+                foreach (var w in allWorkDays)
+                {
+                    if (w.Id == Guid.Empty) continue;
+                    if (!workDayDict.ContainsKey(w.Id) || w.Date > workDayDict[w.Id].Date)
+                        workDayDict[w.Id] = w;
+                }
+                var dedupedWorkDays = workDayDict.Values.ToList();
+
+                // Final filtering to ensure data consistency
+                var filteredTasks = dedupedTasks
                     .Where(t => t.CreatedAt.Date >= startDate.Date && t.CreatedAt.Date <= endDate.Date)
-                    .Where(t => t.Status != TaskStatus.Deleted) // Exclude deleted tasks from analysis
+                    .Where(t => t.Status != TaskStatus.Deleted)
                     .ToList();
 
-                var filteredSessionLogs = allSessionLogs
+                var filteredSessionLogs = dedupedSessionLogs
                     .Where(s => s.Date.Date >= startDate.Date && s.Date.Date <= endDate.Date)
                     .ToList();
 
-                var filteredWorkDays = allWorkDays
+                var filteredWorkDays = dedupedWorkDays
                     .Where(w => w.Date.Date >= startDate.Date && w.Date.Date <= endDate.Date)
                     .ToList();
+
+                // Log data summary for debugging
+                Console.WriteLine($"Data loaded for {startDate:yyyy-MM-dd} to {endDate:yyyy-MM-dd}:");
+                Console.WriteLine($"  - Tasks: {filteredTasks.Count} (from {allTasks.Count} total)");
+                Console.WriteLine($"  - Session Logs: {filteredSessionLogs.Count} (from {allSessionLogs.Count} total)");
+                Console.WriteLine($"  - Work Days: {filteredWorkDays.Count} (from {allWorkDays.Count} total)");
 
                 // Enhanced Task Analysis with better categorization
                 reportData.TotalTasks = filteredTasks.Count;
@@ -217,49 +316,96 @@ namespace TaskManager.CLI.Services
         {
             var archivedData = new ArchivedData();
 
+            Console.WriteLine($"Loading archived data for range: {startDate:yyyy-MM-dd} to {endDate:yyyy-MM-dd}");
+            Console.WriteLine($"Archive path: {_archivePath}");
+
             if (!Directory.Exists(_archivePath))
+            {
+                Console.WriteLine("Archive directory does not exist");
                 return archivedData;
+            }
 
             var archiveDirectories = Directory.GetDirectories(_archivePath);
+            Console.WriteLine($"Found {archiveDirectories.Length} archive directories");
 
             foreach (var dir in archiveDirectories)
             {
                 var dirName = Path.GetFileName(dir);
+                Console.WriteLine($"Processing archive directory: {dirName}");
+                Console.WriteLine($"  - Full path: {dir}");
+                Console.WriteLine($"  - Directory exists: {Directory.Exists(dir)}");
+
                 if (!DateTime.TryParse(dirName, out var archiveDate))
+                {
+                    Console.WriteLine($"  - Could not parse date from directory name: {dirName}");
                     continue;
+                }
+
+                Console.WriteLine($"  - Parsed archive date: {archiveDate:yyyy-MM-dd}");
 
                 if (archiveDate < startDate.Date || archiveDate > endDate.Date)
+                {
+                    Console.WriteLine($"  - Archive date {archiveDate:yyyy-MM-dd} is outside range {startDate:yyyy-MM-dd} to {endDate:yyyy-MM-dd}");
                     continue;
+                }
+
+                Console.WriteLine($"  - Archive date {archiveDate:yyyy-MM-dd} is within range");
 
                 var backupFiles = Directory.GetFiles(dir, "tasks_backup_*.xlsx");
+                Console.WriteLine($"  - Found {backupFiles.Length} backup files");
+
                 if (backupFiles.Length == 0)
+                {
+                    Console.WriteLine($"  - No backup files found in {dir}");
                     continue;
+                }
 
                 // Use the latest backup from that day
                 var latestBackup = backupFiles.OrderByDescending(f => f).First();
+                Console.WriteLine($"  - Using backup file: {Path.GetFileName(latestBackup)}");
 
                 try
                 {
                     using var package = new ExcelPackage(new FileInfo(latestBackup));
+                    
+                    var tasksBefore = archivedData.Tasks.Count;
+                    var sessionsBefore = archivedData.SessionLogs.Count;
+                    var workDaysBefore = archivedData.WorkDays.Count;
+
                     await LoadArchivedTasksAsync(package, archivedData, archiveDate);
                     await LoadArchivedSessionLogsAsync(package, archivedData, archiveDate);
                     await LoadArchivedWorkDaysAsync(package, archivedData, archiveDate);
+
+                    var tasksAdded = archivedData.Tasks.Count - tasksBefore;
+                    var sessionsAdded = archivedData.SessionLogs.Count - sessionsBefore;
+                    var workDaysAdded = archivedData.WorkDays.Count - workDaysBefore;
+
+                    Console.WriteLine($"  - Loaded from {archiveDate:yyyy-MM-dd}: {tasksAdded} tasks, {sessionsAdded} sessions, {workDaysAdded} work days");
                 }
                 catch (Exception ex)
                 {
                     // Log error but continue with other archives
-                    Console.WriteLine($"Error loading archived data from {latestBackup}: {ex.Message}");
+                    Console.WriteLine($"  - Error loading archived data from {latestBackup}: {ex.Message}");
                     // Don't rethrow - continue processing other archives
                 }
             }
 
+            Console.WriteLine($"Total archived data loaded: {archivedData.Tasks.Count} tasks, {archivedData.SessionLogs.Count} sessions, {archivedData.WorkDays.Count} work days");
             return archivedData;
         }
 
         private async Task LoadArchivedTasksAsync(ExcelPackage package, ArchivedData archivedData, DateTime archiveDate)
         {
             var taskSheet = package.Workbook.Worksheets["Tasks"];
-            if (taskSheet?.Dimension == null) return;
+            if (taskSheet?.Dimension == null)
+            {
+                Console.WriteLine($"    - Tasks sheet not found or empty for {archiveDate:yyyy-MM-dd}");
+                return;
+            }
+
+            Console.WriteLine($"    - Loading tasks from sheet with {taskSheet.Dimension.End.Row} rows");
+            
+            var tasksLoaded = 0;
 
             // Find the actual data start row by looking for the header row
             int dataStartRow = 6; // Default start row
@@ -278,7 +424,7 @@ namespace TaskManager.CLI.Services
                 try
                 {
                     var idValue = taskSheet.Cells[row, 1].Value?.ToString();
-                    if (string.IsNullOrEmpty(idValue) || !int.TryParse(idValue, out int taskId))
+                    if (string.IsNullOrEmpty(idValue) || !Guid.TryParse(idValue, out Guid taskId))
                         continue;
 
                     var description = taskSheet.Cells[row, 2].Value?.ToString() ?? "";
@@ -307,6 +453,7 @@ namespace TaskManager.CLI.Services
                         FocusTime = TimeSpan.TryParse(focusTimeValue, out var focusTime) ? focusTime : TimeSpan.Zero
                     };
                     archivedData.Tasks.Add(task);
+                    tasksLoaded++;
                 }
                 catch (Exception ex)
                 {
@@ -315,12 +462,22 @@ namespace TaskManager.CLI.Services
                     continue;
                 }
             }
+
+            Console.WriteLine($"    - Loaded {tasksLoaded} tasks from {archiveDate:yyyy-MM-dd}");
         }
 
         private async Task LoadArchivedSessionLogsAsync(ExcelPackage package, ArchivedData archivedData, DateTime archiveDate)
         {
             var sessionLogSheet = package.Workbook.Worksheets["SessionLogs"];
-            if (sessionLogSheet?.Dimension == null) return;
+            if (sessionLogSheet?.Dimension == null)
+            {
+                Console.WriteLine($"    - SessionLogs sheet not found or empty for {archiveDate:yyyy-MM-dd}");
+                return;
+            }
+
+            Console.WriteLine($"    - Loading session logs from sheet with {sessionLogSheet.Dimension.End.Row} rows");
+            
+            var sessionsLoaded = 0;
 
             // Find the actual data start row by looking for the header row
             int dataStartRow = 6; // Default start row
@@ -358,10 +515,11 @@ namespace TaskManager.CLI.Services
                         StartTime = startTime,
                         EndTime = DateTime.TryParse(endTimeValue, out var endTime) ? endTime : null,
                         Type = Enum.TryParse<SessionType>(typeValue, out var type) ? type : SessionType.Command,
-                        TaskId = int.TryParse(taskIdValue, out var taskId) ? taskId : null,
+                        TaskId = Guid.TryParse(taskIdValue, out var taskId) ? taskId : null,
                         Notes = notes
                     };
                     archivedData.SessionLogs.Add(sessionLog);
+                    sessionsLoaded++;
                 }
                 catch (Exception ex)
                 {
@@ -370,12 +528,22 @@ namespace TaskManager.CLI.Services
                     continue;
                 }
             }
+
+            Console.WriteLine($"    - Loaded {sessionsLoaded} session logs from {archiveDate:yyyy-MM-dd}");
         }
 
         private async Task LoadArchivedWorkDaysAsync(ExcelPackage package, ArchivedData archivedData, DateTime archiveDate)
         {
             var workDaySheet = package.Workbook.Worksheets["WorkDays"];
-            if (workDaySheet?.Dimension == null) return;
+            if (workDaySheet?.Dimension == null)
+            {
+                Console.WriteLine($"    - WorkDays sheet not found or empty for {archiveDate:yyyy-MM-dd}");
+                return;
+            }
+
+            Console.WriteLine($"    - Loading work days from sheet with {workDaySheet.Dimension.End.Row} rows");
+            
+            var workDaysLoaded = 0;
 
             // Find the actual data start row by looking for the header row
             int dataStartRow = 6; // Default start row
@@ -415,6 +583,7 @@ namespace TaskManager.CLI.Services
                         IsActive = bool.TryParse(isActiveValue, out var isActive) ? isActive : false
                     };
                     archivedData.WorkDays.Add(workDay);
+                    workDaysLoaded++;
                 }
                 catch (Exception ex)
                 {
@@ -423,6 +592,8 @@ namespace TaskManager.CLI.Services
                     continue;
                 }
             }
+
+            Console.WriteLine($"    - Loaded {workDaysLoaded} work days from {archiveDate:yyyy-MM-dd}");
         }
 
         private async Task<Dictionary<string, string>> LoadUserAndSystemInfoAsync()

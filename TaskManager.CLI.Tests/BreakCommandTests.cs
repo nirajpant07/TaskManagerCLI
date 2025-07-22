@@ -34,7 +34,7 @@ public class BreakCommandTests
     [Fact]
     public async Task ExecuteAsync_WithFocusedTask_EndsCurrentSessionAndStartsBreak()
     {
-        var tasks = new List<TaskModel> { new() { Id = 1, Description = "Test", Status = TaskStatus.InProgress, IsFocused = true } };
+        var tasks = new List<TaskModel> { new() { Id = Guid.NewGuid(), Description = "Test", Status = TaskStatus.InProgress, IsFocused = true } };
         _repoMock.Setup(r => r.GetAllTasksAsync()).ReturnsAsync(tasks);
         _sessionMock.Setup(s => s.EndCurrentSessionAsync()).Returns(Task.CompletedTask);
         _sessionMock.Setup(s => s.StartBreakSessionAsync()).Returns(Task.CompletedTask);
@@ -44,7 +44,7 @@ public class BreakCommandTests
         var cmd = new BreakCommand(_repoMock.Object, _sessionMock.Object, _notificationMock.Object, _soundMock.Object);
         var result = await cmd.ExecuteAsync(new string[0]);
         Assert.Contains("Break session started", result);
-        Assert.Contains("Task 1 (Test) set to break status", result);
+        Assert.Contains($"Task {tasks[0].Id} ({tasks[0].Description}) set to break status", result);
         _sessionMock.Verify(s => s.EndCurrentSessionAsync(), Times.Once);
         _sessionMock.Verify(s => s.StartBreakSessionAsync(), Times.Once);
     }
@@ -52,7 +52,7 @@ public class BreakCommandTests
     [Fact]
     public async Task ExecuteAsync_UpdatesTaskStatusToOnBreak()
     {
-        var task = new TaskModel { Id = 1, Description = "Test", Status = TaskStatus.InProgress, IsFocused = true };
+        var task = new TaskModel { Id = Guid.NewGuid(), Description = "Test", Status = TaskStatus.InProgress, IsFocused = true };
         var tasks = new List<TaskModel> { task };
         _repoMock.Setup(r => r.GetAllTasksAsync()).ReturnsAsync(tasks);
         _sessionMock.Setup(s => s.EndCurrentSessionAsync()).Returns(Task.CompletedTask);

@@ -1,13 +1,9 @@
-using Xunit;
 using Moq;
-using System.Threading.Tasks;
+using OfficeOpenXml;
 using TaskManager.CLI.Commands.Implementations;
+using TaskManager.CLI.Models;
 using TaskManager.CLI.Repositories;
 using TaskManager.CLI.Utilities;
-using System.Collections.Generic;
-using TaskManager.CLI.Models;
-using System.IO;
-using OfficeOpenXml;
 
 namespace TaskManager.CLI.Tests;
 
@@ -27,7 +23,7 @@ public class ReportCommandTests
     {
         // Arrange
         var command = new ReportCommand(_repoMock.Object, _consoleMock.Object);
-        
+
         _repoMock.Setup(r => r.GetAllTasksAsync()).ReturnsAsync(new List<TaskModel>());
         _repoMock.Setup(r => r.GetTodaySessionLogsAsync()).ReturnsAsync(new List<SessionLog>());
         _repoMock.Setup(r => r.GetTodayWorkDayAsync()).ReturnsAsync((WorkDay?)null);
@@ -40,7 +36,7 @@ public class ReportCommandTests
         // Assert
         Assert.NotNull(result);
         Assert.NotEmpty(result);
-        
+
         // Check if report was generated successfully or if there was an error
         if (result.Contains("📊 HTML Report Generated Successfully!"))
         {
@@ -59,20 +55,20 @@ public class ReportCommandTests
     {
         // Arrange
         var command = new ReportCommand(_repoMock.Object, _consoleMock.Object);
-        
+
         var tasks = new List<TaskModel>
         {
-            new() { Id = 1, Description = "Test Task 1", Status = Models.TaskStatus.Completed },
-            new() { Id = 2, Description = "Test Task 2", Status = Models.TaskStatus.Pending }
+            new() { Id = Guid.NewGuid(), Description = "Test Task 1", Status = Models.TaskStatus.Completed },
+            new() { Id = Guid.NewGuid(), Description = "Test Task 2", Status = Models.TaskStatus.Pending }
         };
-        
+
         var sessionLogs = new List<SessionLog>
         {
-            new() { Type = SessionType.Focus, StartTime = System.DateTime.UtcNow, EndTime = System.DateTime.UtcNow.AddMinutes(25) },
-            new() { Type = SessionType.Break, StartTime = System.DateTime.UtcNow, EndTime = System.DateTime.UtcNow.AddMinutes(5) },
-            new() { Type = SessionType.Command, Notes = "Command executed: !task Test task" }
+            new() { Id = Guid.NewGuid(), Type = SessionType.Focus, StartTime = System.DateTime.UtcNow, EndTime = System.DateTime.UtcNow.AddMinutes(25) },
+            new() { Id = Guid.NewGuid(), Type = SessionType.Break, StartTime = System.DateTime.UtcNow, EndTime = System.DateTime.UtcNow.AddMinutes(5) },
+            new() { Id = Guid.NewGuid(), Type = SessionType.Command, Notes = "Command executed: !task Test task" }
         };
-        
+
         _repoMock.Setup(r => r.GetAllTasksAsync()).ReturnsAsync(tasks);
         _repoMock.Setup(r => r.GetTodaySessionLogsAsync()).ReturnsAsync(sessionLogs);
         _repoMock.Setup(r => r.GetTodayWorkDayAsync()).ReturnsAsync((WorkDay?)null);
@@ -85,7 +81,7 @@ public class ReportCommandTests
         // Assert
         Assert.NotNull(result);
         Assert.NotEmpty(result);
-        
+
         // Check if report was generated successfully or if there was an error
         if (result.Contains("📊 HTML Report Generated Successfully!"))
         {
@@ -104,7 +100,7 @@ public class ReportCommandTests
     {
         // Arrange
         var command = new ReportCommand(_repoMock.Object, _consoleMock.Object);
-        
+
         _repoMock.Setup(r => r.GetAllTasksAsync()).ThrowsAsync(new IOException("File not found"));
 
         // Act
@@ -120,7 +116,7 @@ public class ReportCommandTests
     {
         // Arrange
         var command = new ReportCommand(_repoMock.Object, _consoleMock.Object);
-        
+
         _repoMock.Setup(r => r.GetAllTasksAsync()).ReturnsAsync(new List<TaskModel>());
         _repoMock.Setup(r => r.GetTodaySessionLogsAsync()).ReturnsAsync(new List<SessionLog>());
         _repoMock.Setup(r => r.GetTodayWorkDayAsync()).ReturnsAsync((WorkDay?)null);
@@ -142,7 +138,7 @@ public class ReportCommandTests
     {
         // Arrange
         var command = new ReportCommand(_repoMock.Object, _consoleMock.Object);
-        
+
         _repoMock.Setup(r => r.GetAllTasksAsync()).ReturnsAsync(new List<TaskModel>());
         _repoMock.Setup(r => r.GetTodaySessionLogsAsync()).ReturnsAsync(new List<SessionLog>());
         _repoMock.Setup(r => r.GetTodayWorkDayAsync()).ReturnsAsync((WorkDay?)null);
@@ -163,7 +159,7 @@ public class ReportCommandTests
     {
         // Arrange
         var command = new ReportCommand(_repoMock.Object, _consoleMock.Object);
-        
+
         _repoMock.Setup(r => r.GetAllTasksAsync()).ReturnsAsync(new List<TaskModel>());
         _repoMock.Setup(r => r.GetTodaySessionLogsAsync()).ReturnsAsync(new List<SessionLog>());
         _repoMock.Setup(r => r.GetTodayWorkDayAsync()).ReturnsAsync((WorkDay?)null);
@@ -176,7 +172,7 @@ public class ReportCommandTests
         // Assert
         Assert.NotNull(result);
         Assert.NotEmpty(result);
-        
+
         // Check if report was generated successfully or if there was an error
         if (result.Contains("📊 HTML Report Generated Successfully!"))
         {
@@ -195,7 +191,7 @@ public class ReportCommandTests
     {
         // Arrange
         var command = new ReportCommand(_repoMock.Object, _consoleMock.Object);
-        
+
         _repoMock.Setup(r => r.GetAllTasksAsync()).ReturnsAsync(new List<TaskModel>());
         _repoMock.Setup(r => r.GetTodaySessionLogsAsync()).ReturnsAsync(new List<SessionLog>());
         _repoMock.Setup(r => r.GetTodayWorkDayAsync()).ReturnsAsync((WorkDay?)null);
@@ -208,7 +204,7 @@ public class ReportCommandTests
         // Assert
         Assert.NotNull(result);
         Assert.NotEmpty(result);
-        
+
         // Check if report was generated successfully or if there was an error
         if (result.Contains("📊 HTML Report Generated Successfully!"))
         {
@@ -237,4 +233,4 @@ public class ReportCommandTests
         Assert.Contains("❌ Invalid date format", result);
         Assert.Contains("Usage: !report [start_date] [end_date]", result);
     }
-} 
+}

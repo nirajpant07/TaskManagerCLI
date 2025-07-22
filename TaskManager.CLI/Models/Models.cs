@@ -2,7 +2,7 @@
 
 public class TaskModel
 {
-    public int Id { get; set; }
+    public Guid Id { get; set; } = Guid.NewGuid();
     public string Description { get; set; } = string.Empty;
     public TaskStatus Status { get; set; }
     public DateTime CreatedAt { get; set; }
@@ -25,6 +25,7 @@ public enum TaskStatus
 
 public class FocusSession
 {
+    public Guid Id { get; set; } = Guid.NewGuid();
     public DateTime SessionDate { get; set; }
     public TimeSpan TotalFocusTime { get; set; }
     public TimeSpan TotalBreakTime { get; set; }
@@ -39,6 +40,7 @@ public class FocusSession
 
 public class WorkDay
 {
+    public Guid Id { get; set; } = Guid.NewGuid();
     public DateTime Date { get; set; }
     public DateTime StartTime { get; set; }
     public DateTime? EndTime { get; set; }
@@ -49,11 +51,12 @@ public class WorkDay
 
 public class SessionLog
 {
+    public Guid Id { get; set; } = Guid.NewGuid();
     public DateTime Date { get; set; }
     public DateTime StartTime { get; set; }
     public DateTime? EndTime { get; set; }
     public SessionType Type { get; set; }
-    public int? TaskId { get; set; }
+    public Guid? TaskId { get; set; }
     public string Notes { get; set; } = string.Empty;
 }
 
@@ -68,6 +71,7 @@ public enum SessionType
 
 public class DayStatistics
 {
+    public Guid Id { get; set; } = Guid.NewGuid();
     public DateTime Date { get; set; }
     public TimeSpan TotalFocusTime { get; set; }
     public TimeSpan TotalBreakTime { get; set; }

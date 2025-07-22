@@ -45,6 +45,7 @@ namespace TaskManager.CLI.Commands.Implementations
 
                 var task = new TaskModel
                 {
+                    Id = Guid.NewGuid(),
                     Description = taskDesc,
                     Status = Models.TaskStatus.Pending
                 };

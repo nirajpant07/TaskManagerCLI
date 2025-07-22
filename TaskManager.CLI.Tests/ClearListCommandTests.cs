@@ -18,12 +18,12 @@ public class ClearListCommandTests
     {
         var tasks = new List<TaskModel>
         {
-            new() { Id = 1, Description = "Task 1", Status = TaskStatus.Pending },
-            new() { Id = 2, Description = "Task 2", Status = TaskStatus.InProgress },
-            new() { Id = 3, Description = "Task 3", Status = TaskStatus.Paused }
+            new() { Id = Guid.NewGuid(), Description = "Task 1", Status = TaskStatus.Pending },
+            new() { Id = Guid.NewGuid(), Description = "Task 2", Status = TaskStatus.InProgress },
+            new() { Id = Guid.NewGuid(), Description = "Task 3", Status = TaskStatus.Paused }
         };
         _repoMock.Setup(r => r.GetAllTasksAsync()).ReturnsAsync(tasks);
-        _repoMock.Setup(r => r.DeleteTaskAsync(It.IsAny<int>())).Returns(Task.CompletedTask);
+        _repoMock.Setup(r => r.DeleteTaskAsync(It.IsAny<Guid>())).Returns(Task.CompletedTask);
         var cmd = new ClearListCommand(_repoMock.Object);
         var result = await cmd.ExecuteAsync(new string[0]);
         Assert.Contains("All tasks cleared", result);
@@ -46,15 +46,15 @@ public class ClearListCommandTests
     {
         var tasks = new List<TaskModel>
         {
-            new() { Id = 1, Description = "Task 1", Status = TaskStatus.Pending },
-            new() { Id = 2, Description = "Task 2", Status = TaskStatus.InProgress }
+            new() { Id = Guid.NewGuid(), Description = "Task 1", Status = TaskStatus.Pending },
+            new() { Id = Guid.NewGuid(), Description = "Task 2", Status = TaskStatus.InProgress }
         };
         _repoMock.Setup(r => r.GetAllTasksAsync()).ReturnsAsync(tasks);
-        _repoMock.Setup(r => r.DeleteTaskAsync(It.IsAny<int>())).Returns(Task.CompletedTask);
+        _repoMock.Setup(r => r.DeleteTaskAsync(It.IsAny<Guid>())).Returns(Task.CompletedTask);
         var cmd = new ClearListCommand(_repoMock.Object);
         await cmd.ExecuteAsync(new string[0]);
-        _repoMock.Verify(r => r.DeleteTaskAsync(1), Times.Once);
-        _repoMock.Verify(r => r.DeleteTaskAsync(2), Times.Once);
+        _repoMock.Verify(r => r.DeleteTaskAsync(tasks[0].Id), Times.Once);
+        _repoMock.Verify(r => r.DeleteTaskAsync(tasks[1].Id), Times.Once);
     }
 
     [Fact]
@@ -62,16 +62,16 @@ public class ClearListCommandTests
     {
         var tasks = new List<TaskModel>
         {
-            new() { Id = 1, Description = "Active", Status = TaskStatus.Pending },
-            new() { Id = 2, Description = "Deleted", Status = TaskStatus.Deleted }
+            new() { Id = Guid.NewGuid(), Description = "Active", Status = TaskStatus.Pending },
+            new() { Id = Guid.NewGuid(), Description = "Deleted", Status = TaskStatus.Deleted }
         };
         _repoMock.Setup(r => r.GetAllTasksAsync()).ReturnsAsync(tasks);
-        _repoMock.Setup(r => r.DeleteTaskAsync(It.IsAny<int>())).Returns(Task.CompletedTask);
+        _repoMock.Setup(r => r.DeleteTaskAsync(It.IsAny<Guid>())).Returns(Task.CompletedTask);
         var cmd = new ClearListCommand(_repoMock.Object);
         var result = await cmd.ExecuteAsync(new string[0]);
         Assert.Contains("Deleted 1 task(s)", result);
-        _repoMock.Verify(r => r.DeleteTaskAsync(1), Times.Once);
-        _repoMock.Verify(r => r.DeleteTaskAsync(2), Times.Never);
+        _repoMock.Verify(r => r.DeleteTaskAsync(tasks[0].Id), Times.Once);
+        _repoMock.Verify(r => r.DeleteTaskAsync(tasks[1].Id), Times.Never);
     }
 
     [Fact]
@@ -79,10 +79,10 @@ public class ClearListCommandTests
     {
         var tasks = new List<TaskModel>
         {
-            new() { Id = 1, Description = "Task 1", Status = TaskStatus.Pending }
+            new() { Id = Guid.NewGuid(), Description = "Task 1", Status = TaskStatus.Pending }
         };
         _repoMock.Setup(r => r.GetAllTasksAsync()).ReturnsAsync(tasks);
-        _repoMock.Setup(r => r.DeleteTaskAsync(It.IsAny<int>())).Returns(Task.CompletedTask);
+        _repoMock.Setup(r => r.DeleteTaskAsync(It.IsAny<Guid>())).Returns(Task.CompletedTask);
         var cmd = new ClearListCommand(_repoMock.Object);
         var result = await cmd.ExecuteAsync(new string[0]);
         Assert.Contains("Start fresh with '!task", result);

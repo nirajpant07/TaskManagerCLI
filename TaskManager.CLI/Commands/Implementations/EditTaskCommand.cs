@@ -22,9 +22,9 @@ namespace TaskManager.CLI.Commands.Implementations
                 return "❌ Please provide task ID and new description.\n💡 Usage: !edit <task_id> <new description>";
             }
 
-            if (!int.TryParse(parameters[0], out int taskId))
+            if (!Guid.TryParse(parameters[0], out Guid taskId))
             {
-                return "❌ Invalid task ID. Please provide a valid number.";
+                return "❌ Invalid task ID. Please provide a valid GUID.";
             }
 
             var task = await _repository.GetTaskByIdAsync(taskId);

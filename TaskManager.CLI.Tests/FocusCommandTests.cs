@@ -19,7 +19,7 @@ public class FocusCommandTests
     [Fact]
     public async Task ExecuteAsync_ShowCurrentFocus_NoTaskFocused_ReturnsMessage()
     {
-        var tasks = new List<TaskModel> { new() { Id = 1, Description = "Test", Status = TaskStatus.Pending } };
+        var tasks = new List<TaskModel> { new() { Id = Guid.NewGuid(), Description = "Test", Status = TaskStatus.Pending } };
         _repoMock.Setup(r => r.GetAllTasksAsync()).ReturnsAsync(tasks);
         var cmd = new FocusCommand(_repoMock.Object, _sessionMock.Object);
         var result = await cmd.ExecuteAsync(new string[0]);
@@ -30,11 +30,11 @@ public class FocusCommandTests
     [Fact]
     public async Task ExecuteAsync_ShowCurrentFocus_TaskFocused_ReturnsTaskInfo()
     {
-        var tasks = new List<TaskModel> { new() { Id = 1, Description = "Test", Status = TaskStatus.InProgress, IsFocused = true, FocusTime = TimeSpan.FromMinutes(30) } };
+        var tasks = new List<TaskModel> { new() { Id = Guid.NewGuid(), Description = "Test", Status = TaskStatus.InProgress, IsFocused = true, FocusTime = TimeSpan.FromMinutes(30) } };
         _repoMock.Setup(r => r.GetAllTasksAsync()).ReturnsAsync(tasks);
         var cmd = new FocusCommand(_repoMock.Object, _sessionMock.Object);
         var result = await cmd.ExecuteAsync(new string[0]);
-        Assert.Contains("Currently focused on task 1", result);
+        Assert.Contains($"Currently focused on task {tasks[0].Id}", result);
         Assert.Contains("Test", result);
         Assert.Contains("Total focus time", result);
     }
@@ -42,31 +42,31 @@ public class FocusCommandTests
     [Fact]
     public async Task ExecuteAsync_FocusNext_NoSpecificId_ReturnsSuccess()
     {
-        var tasks = new List<TaskModel> { new() { Id = 1, Description = "Test", Status = TaskStatus.Pending } };
+        var tasks = new List<TaskModel> { new() { Id = Guid.NewGuid(), Description = "Test", Status = TaskStatus.Pending } };
         var session = new FocusSession { FocusMinutes = 25 };
         _repoMock.Setup(r => r.GetAllTasksAsync()).ReturnsAsync(tasks);
-        _repoMock.Setup(r => r.GetTaskByIdAsync(1)).ReturnsAsync(tasks[0]);
+        _repoMock.Setup(r => r.GetTaskByIdAsync(tasks[0].Id)).ReturnsAsync(tasks[0]);
         _repoMock.Setup(r => r.UpdateTaskAsync(It.IsAny<TaskModel>())).Returns(Task.CompletedTask);
         _repoMock.Setup(r => r.GetTodaySessionAsync()).ReturnsAsync(session);
         _sessionMock.Setup(s => s.StartFocusSessionAsync(It.IsAny<TaskModel>())).Returns(Task.CompletedTask);
         var cmd = new FocusCommand(_repoMock.Object, _sessionMock.Object);
         var result = await cmd.ExecuteAsync(new[] { "next" });
-        Assert.Contains("Now focusing on task 1", result);
+        Assert.Contains($"Now focusing on task {tasks[0].Id}", result);
     }
 
     [Fact]
     public async Task ExecuteAsync_FocusSpecificTask_ReturnsSuccess()
     {
-        var tasks = new List<TaskModel> { new() { Id = 1, Description = "Test", Status = TaskStatus.Pending } };
+        var tasks = new List<TaskModel> { new() { Id = Guid.NewGuid(), Description = "Test", Status = TaskStatus.Pending } };
         var session = new FocusSession { FocusMinutes = 25 };
         _repoMock.Setup(r => r.GetAllTasksAsync()).ReturnsAsync(tasks);
-        _repoMock.Setup(r => r.GetTaskByIdAsync(1)).ReturnsAsync(tasks[0]);
+        _repoMock.Setup(r => r.GetTaskByIdAsync(tasks[0].Id)).ReturnsAsync(tasks[0]);
         _repoMock.Setup(r => r.UpdateTaskAsync(It.IsAny<TaskModel>())).Returns(Task.CompletedTask);
         _repoMock.Setup(r => r.GetTodaySessionAsync()).ReturnsAsync(session);
         _sessionMock.Setup(s => s.StartFocusSessionAsync(It.IsAny<TaskModel>())).Returns(Task.CompletedTask);
         var cmd = new FocusCommand(_repoMock.Object, _sessionMock.Object);
-        var result = await cmd.ExecuteAsync(new[] { "next", "1" });
-        Assert.Contains("Now focusing on task 1", result);
+        var result = await cmd.ExecuteAsync(new[] { "next", tasks[0].Id.ToString() });
+        Assert.Contains($"Now focusing on task {tasks[0].Id}", result);
     }
 
     [Fact]
@@ -75,32 +75,33 @@ public class FocusCommandTests
         var tasks = new List<TaskModel>();
         _repoMock.Setup(r => r.GetAllTasksAsync()).ReturnsAsync(tasks);
         var cmd = new FocusCommand(_repoMock.Object, _sessionMock.Object);
-        var result = await cmd.ExecuteAsync(new[] { "next", "99" });
-        Assert.Contains("Task 99 not found", result);
+        var missingId = Guid.NewGuid();
+        var result = await cmd.ExecuteAsync(new[] { "next", missingId.ToString() });
+        Assert.Contains($"Task {missingId} not found", result);
     }
 
     [Fact]
     public async Task ExecuteAsync_TaskCompleted_ReturnsError()
     {
-        var task = new TaskModel { Id = 1, Description = "Test", Status = TaskStatus.Completed };
+        var task = new TaskModel { Id = Guid.NewGuid(), Description = "Test", Status = TaskStatus.Completed };
         var tasks = new List<TaskModel>();
         _repoMock.Setup(r => r.GetAllTasksAsync()).ReturnsAsync(tasks);
-        _repoMock.Setup(r => r.GetTaskByIdAsync(1)).ReturnsAsync(task);
+        _repoMock.Setup(r => r.GetTaskByIdAsync(task.Id)).ReturnsAsync(task);
         var cmd = new FocusCommand(_repoMock.Object, _sessionMock.Object);
-        var result = await cmd.ExecuteAsync(new[] { "next", "1" });
-        Assert.Contains("Task 1 is already completed", result);
+        var result = await cmd.ExecuteAsync(new[] { "next", task.Id.ToString() });
+        Assert.Contains($"Task {task.Id} is already completed", result);
     }
 
     [Fact]
     public async Task ExecuteAsync_TaskDeleted_ReturnsError()
     {
-        var task = new TaskModel { Id = 1, Description = "Test", Status = TaskStatus.Deleted };
+        var task = new TaskModel { Id = Guid.NewGuid(), Description = "Test", Status = TaskStatus.Deleted };
         var tasks = new List<TaskModel>();
         _repoMock.Setup(r => r.GetAllTasksAsync()).ReturnsAsync(tasks);
-        _repoMock.Setup(r => r.GetTaskByIdAsync(1)).ReturnsAsync(task);
+        _repoMock.Setup(r => r.GetTaskByIdAsync(task.Id)).ReturnsAsync(task);
         var cmd = new FocusCommand(_repoMock.Object, _sessionMock.Object);
-        var result = await cmd.ExecuteAsync(new[] { "next", "1" });
-        Assert.Contains("Task 1 has been deleted", result);
+        var result = await cmd.ExecuteAsync(new[] { "next", task.Id.ToString() });
+        Assert.Contains($"Task {task.Id} has been deleted", result);
     }
 
     [Fact]
@@ -116,19 +117,19 @@ public class FocusCommandTests
     [Fact]
     public async Task ExecuteAsync_SwitchFocus_EndsCurrentSession()
     {
-        var currentTask = new TaskModel { Id = 1, Description = "Current", Status = TaskStatus.InProgress, IsFocused = true };
-        var newTask = new TaskModel { Id = 2, Description = "New", Status = TaskStatus.Pending };
+        var currentTask = new TaskModel { Id = Guid.NewGuid(), Description = "Current", Status = TaskStatus.InProgress, IsFocused = true };
+        var newTask = new TaskModel { Id = Guid.NewGuid(), Description = "New", Status = TaskStatus.Pending };
         var tasks = new List<TaskModel> { currentTask, newTask };
         var session = new FocusSession { FocusMinutes = 25 };
         _repoMock.Setup(r => r.GetAllTasksAsync()).ReturnsAsync(tasks);
-        _repoMock.Setup(r => r.GetTaskByIdAsync(2)).ReturnsAsync(newTask);
+        _repoMock.Setup(r => r.GetTaskByIdAsync(newTask.Id)).ReturnsAsync(newTask);
         _repoMock.Setup(r => r.UpdateTaskAsync(It.IsAny<TaskModel>())).Returns(Task.CompletedTask);
         _repoMock.Setup(r => r.GetTodaySessionAsync()).ReturnsAsync(session);
         _sessionMock.Setup(s => s.EndCurrentSessionAsync()).Returns(Task.CompletedTask);
         _sessionMock.Setup(s => s.StartFocusSessionAsync(It.IsAny<TaskModel>())).Returns(Task.CompletedTask);
         var cmd = new FocusCommand(_repoMock.Object, _sessionMock.Object);
-        var result = await cmd.ExecuteAsync(new[] { "next", "2" });
-        Assert.Contains("Now focusing on task 2", result);
+        var result = await cmd.ExecuteAsync(new[] { "next", newTask.Id.ToString() });
+        Assert.Contains($"Now focusing on task {newTask.Id}", result);
         _sessionMock.Verify(s => s.EndCurrentSessionAsync(), Times.Once);
     }
 } 

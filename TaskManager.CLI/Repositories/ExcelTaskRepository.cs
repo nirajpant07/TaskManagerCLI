@@ -58,25 +58,29 @@ namespace TaskManager.CLI.Repositories
             var taskSheet = package.Workbook.Worksheets["Tasks"];
             if (taskSheet?.Dimension == null) return;
 
-            // Data starts from row 6 (after headers and formatting)
             for (int row = 6; row <= taskSheet.Dimension.End.Row; row++)
             {
-                if (taskSheet.Cells[row, 1].Value != null)
+                Guid id;
+                var idCell = taskSheet.Cells[row, 1].Value?.ToString();
+                if (string.IsNullOrEmpty(idCell) || !Guid.TryParse(idCell, out id))
                 {
-                    var task = new TaskModel
-                    {
-                        Id = int.Parse(taskSheet.Cells[row, 1].Value.ToString()),
-                        Description = taskSheet.Cells[row, 2].Value?.ToString() ?? "",
-                        Status = Enum.Parse<TaskStatus>(taskSheet.Cells[row, 3].Value?.ToString() ?? "Pending"),
-                        CreatedAt = DateTime.Parse(taskSheet.Cells[row, 4].Value?.ToString() ?? DateTime.UtcNow.ToString()),
-                        CompletedAt = DateTime.TryParse(taskSheet.Cells[row, 5].Value?.ToString(), out var completed) ? completed : null,
-                        PausedAt = DateTime.TryParse(taskSheet.Cells[row, 6].Value?.ToString(), out var paused) ? paused : null,
-                        PauseReason = taskSheet.Cells[row, 7].Value?.ToString() ?? "",
-                        IsFocused = bool.Parse(taskSheet.Cells[row, 8].Value?.ToString() ?? "false"),
-                        FocusTime = TimeSpan.TryParse(taskSheet.Cells[row, 9].Value?.ToString(), out var focusTime) ? focusTime : TimeSpan.Zero
-                    };
-                    _tasks.Add(task);
+                    id = Guid.NewGuid();
+                    taskSheet.Cells[row, 1].Value = id; // Write back to Excel
                 }
+
+                var task = new TaskModel
+                {
+                    Id = id,
+                    Description = taskSheet.Cells[row, 2].Value?.ToString() ?? "",
+                    Status = Enum.Parse<TaskStatus>(taskSheet.Cells[row, 3].Value?.ToString() ?? "Pending"),
+                    CreatedAt = DateTime.Parse(taskSheet.Cells[row, 4].Value?.ToString() ?? DateTime.UtcNow.ToString()),
+                    CompletedAt = DateTime.TryParse(taskSheet.Cells[row, 5].Value?.ToString(), out var completed) ? completed : null,
+                    PausedAt = DateTime.TryParse(taskSheet.Cells[row, 6].Value?.ToString(), out var paused) ? paused : null,
+                    PauseReason = taskSheet.Cells[row, 7].Value?.ToString() ?? "",
+                    IsFocused = bool.Parse(taskSheet.Cells[row, 8].Value?.ToString() ?? "false"),
+                    FocusTime = TimeSpan.TryParse(taskSheet.Cells[row, 9].Value?.ToString(), out var focusTime) ? focusTime : TimeSpan.Zero
+                };
+                _tasks.Add(task);
             }
         }
 
@@ -138,21 +142,26 @@ namespace TaskManager.CLI.Repositories
             var workDaySheet = package.Workbook.Worksheets["WorkDays"];
             if (workDaySheet?.Dimension == null) return;
 
-            // Data starts from row 7 (after headers and formatting)
             for (int row = 7; row <= workDaySheet.Dimension.End.Row; row++)
             {
-                if (DateTime.TryParse(workDaySheet.Cells[row, 1].Value?.ToString(), out var date))
+                Guid id;
+                var idCell = workDaySheet.Cells[row, 1].Value?.ToString();
+                if (string.IsNullOrEmpty(idCell) || !Guid.TryParse(idCell, out id))
                 {
-                    var workDay = new WorkDay
-                    {
-                        Date = date.Date,
-                        StartTime = DateTime.Parse(workDaySheet.Cells[row, 2].Value?.ToString() ?? DateTime.UtcNow.ToString()),
-                        EndTime = DateTime.TryParse(workDaySheet.Cells[row, 3].Value?.ToString(), out var endTime) ? endTime : null,
-                        PlannedDuration = TimeSpan.Parse(workDaySheet.Cells[row, 4].Value?.ToString() ?? "08:30:00"),
-                        IsActive = bool.Parse(workDaySheet.Cells[row, 5].Value?.ToString() ?? "false")
-                    };
-                    _workDays.Add(workDay);
+                    id = Guid.NewGuid();
+                    workDaySheet.Cells[row, 1].Value = id; // Write back to Excel
                 }
+
+                var workDay = new WorkDay
+                {
+                    Id = id,
+                    Date = DateTime.Parse(workDaySheet.Cells[row, 2].Value?.ToString() ?? DateTime.UtcNow.ToString()),
+                    StartTime = DateTime.Parse(workDaySheet.Cells[row, 3].Value?.ToString() ?? DateTime.UtcNow.ToString()),
+                    EndTime = DateTime.TryParse(workDaySheet.Cells[row, 4].Value?.ToString(), out var endTime) ? endTime : null,
+                    PlannedDuration = TimeSpan.Parse(workDaySheet.Cells[row, 5].Value?.ToString() ?? "08:30:00"),
+                    IsActive = bool.Parse(workDaySheet.Cells[row, 6].Value?.ToString() ?? "false")
+                };
+                _workDays.Add(workDay);
             }
         }
 
@@ -161,22 +170,27 @@ namespace TaskManager.CLI.Repositories
             var logSheet = package.Workbook.Worksheets["SessionLogs"];
             if (logSheet?.Dimension == null) return;
 
-            // Data starts from row 8 (after headers, formatting, and example row)
             for (int row = 8; row <= logSheet.Dimension.End.Row; row++)
             {
-                if (DateTime.TryParse(logSheet.Cells[row, 1].Value?.ToString(), out var date))
+                Guid id;
+                var idCell = logSheet.Cells[row, 1].Value?.ToString();
+                if (string.IsNullOrEmpty(idCell) || !Guid.TryParse(idCell, out id))
                 {
-                    var log = new SessionLog
-                    {
-                        Date = date.Date,
-                        StartTime = DateTime.Parse(logSheet.Cells[row, 2].Value?.ToString() ?? DateTime.UtcNow.ToString()),
-                        EndTime = DateTime.TryParse(logSheet.Cells[row, 3].Value?.ToString(), out var endTime) ? endTime : null,
-                        Type = Enum.Parse<SessionType>(logSheet.Cells[row, 4].Value?.ToString() ?? "Focus"),
-                        TaskId = int.TryParse(logSheet.Cells[row, 5].Value?.ToString(), out var taskId) ? taskId : null,
-                        Notes = logSheet.Cells[row, 6].Value?.ToString() ?? ""
-                    };
-                    _sessionLogs.Add(log);
+                    id = Guid.NewGuid();
+                    logSheet.Cells[row, 1].Value = id; // Write back to Excel
                 }
+
+                var log = new SessionLog
+                {
+                    Id = id,
+                    Date = DateTime.Parse(logSheet.Cells[row, 2].Value?.ToString() ?? DateTime.UtcNow.ToString()),
+                    StartTime = DateTime.Parse(logSheet.Cells[row, 3].Value?.ToString() ?? DateTime.UtcNow.ToString()),
+                    EndTime = DateTime.TryParse(logSheet.Cells[row, 4].Value?.ToString(), out var endTime) ? endTime : null,
+                    Type = Enum.Parse<SessionType>(logSheet.Cells[row, 5].Value?.ToString() ?? "Focus"),
+                    TaskId = Guid.TryParse(logSheet.Cells[row, 6].Value?.ToString(), out var taskId) ? taskId : null,
+                    Notes = logSheet.Cells[row, 7].Value?.ToString() ?? ""
+                };
+                _sessionLogs.Add(log);
             }
         }
 
@@ -234,7 +248,7 @@ namespace TaskManager.CLI.Repositories
             // Add data type descriptions
             var dataTypes = new string[]
             {
-                "Integer", "Text", "Enum", "DateTime", "DateTime", "DateTime",
+                "Guid", "Text", "Enum", "DateTime", "DateTime", "DateTime",
                 "Text", "Boolean", "TimeSpan"
             };
 
@@ -356,7 +370,7 @@ namespace TaskManager.CLI.Repositories
             // Add data type descriptions
             var dataTypes = new string[]
             {
-                "Date", "DateTime", "DateTime", "TimeSpan", "Boolean"
+                "Guid", "DateTime", "DateTime", "TimeSpan", "Boolean"
             };
 
             for (int i = 0; i < dataTypes.Length; i++)
@@ -400,7 +414,7 @@ namespace TaskManager.CLI.Repositories
             // Create headers
             var headers = new string[]
             {
-                "Log Date", "Session Start Time", "Session End Time", "Session Type", "Related Task ID", "Activity Notes"
+                "Log ID", "Session Start Time", "Session End Time", "Session Type", "Related Task ID", "Activity Notes"
             };
 
             for (int i = 0; i < headers.Length; i++)
@@ -415,7 +429,7 @@ namespace TaskManager.CLI.Repositories
             // Add data type descriptions
             var dataTypes = new string[]
             {
-                "Date", "DateTime", "DateTime", "Enum", "Integer", "Text"
+                "Guid", "DateTime", "DateTime", "Enum", "Guid", "Text"
             };
 
             for (int i = 0; i < dataTypes.Length; i++)
@@ -756,14 +770,14 @@ namespace TaskManager.CLI.Repositories
             return Task.FromResult(_tasks.Where(t => t.Status != TaskStatus.Deleted).ToList());
         }
 
-        public Task<TaskModel?> GetTaskByIdAsync(int id)
+        public Task<TaskModel?> GetTaskByIdAsync(Guid id)
         {
             return Task.FromResult(_tasks.FirstOrDefault(t => t.Id == id && t.Status != TaskStatus.Deleted));
         }
 
-        public Task<int> AddTaskAsync(TaskModel task)
+        public Task<Guid> AddTaskAsync(TaskModel task)
         {
-            task.Id = _tasks.Any() ? _tasks.Max(t => t.Id) + 1 : 1;
+            task.Id = Guid.NewGuid();
             task.CreatedAt = DateTime.UtcNow;
             _tasks.Add(task);
             return Task.FromResult(task.Id);
@@ -780,7 +794,7 @@ namespace TaskManager.CLI.Repositories
             return Task.CompletedTask;
         }
 
-        public Task DeleteTaskAsync(int id)
+        public Task DeleteTaskAsync(Guid id)
         {
             var task = _tasks.FirstOrDefault(t => t.Id == id);
             if (task != null)
@@ -819,6 +833,7 @@ namespace TaskManager.CLI.Repositories
 
             var workDay = new WorkDay
             {
+                Id = Guid.NewGuid(),
                 Date = today,
                 StartTime = DateTime.UtcNow,
                 IsActive = true,
@@ -1008,7 +1023,7 @@ namespace TaskManager.CLI.Repositories
                 // Add data type descriptions
                 var dataTypes = new string[]
                 {
-                    "Integer", "Text", "Enum", "DateTime", "DateTime", "DateTime",
+                    "Guid", "Text", "Enum", "DateTime", "DateTime", "DateTime",
                     "Text", "Boolean", "TimeSpan"
                 };
 
@@ -1089,7 +1104,7 @@ namespace TaskManager.CLI.Repositories
             {
                 var workDay = _workDays[i];
                 var row = i + 7;
-                workDaySheet.Cells[row, 1].Value = workDay.Date.ToString("yyyy-MM-dd");
+                workDaySheet.Cells[row, 1].Value = workDay.Id;
                 workDaySheet.Cells[row, 2].Value = workDay.StartTime.ToString("yyyy-MM-dd HH:mm:ss");
                 workDaySheet.Cells[row, 3].Value = workDay.EndTime?.ToString("yyyy-MM-dd HH:mm:ss");
                 workDaySheet.Cells[row, 4].Value = workDay.PlannedDuration.ToString();
@@ -1119,7 +1134,7 @@ namespace TaskManager.CLI.Repositories
             {
                 var log = _sessionLogs[i];
                 var row = i + 8;
-                logSheet.Cells[row, 1].Value = log.Date.ToString("yyyy-MM-dd");
+                logSheet.Cells[row, 1].Value = log.Id;
                 logSheet.Cells[row, 2].Value = log.StartTime.ToString("yyyy-MM-dd HH:mm:ss");
                 logSheet.Cells[row, 3].Value = log.EndTime?.ToString("yyyy-MM-dd HH:mm:ss");
                 logSheet.Cells[row, 4].Value = log.Type.ToString();
