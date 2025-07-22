@@ -40,10 +40,10 @@ public class CheckCommandTests
         _repoMock.Setup(r => r.GetAllTasksAsync()).ReturnsAsync(tasks);
         var cmd = new CheckCommand(_repoMock.Object, _consoleMock.Object);
         var result = await cmd.ExecuteAsync(new string[0]);
-        Assert.Contains("📝 Pending", result);
-        Assert.Contains("🎯 InProgress", result);
-        Assert.Contains("⏸️ Paused", result);
-        Assert.Contains("☕ OnBreak", result);
+        Assert.Contains("In Progress:", result);
+        Assert.Contains("Paused:", result);
+        Assert.Contains("On Break:", result);
+        Assert.Contains("Pending:", result);
     }
 
     [Fact]
@@ -69,7 +69,7 @@ public class CheckCommandTests
         _repoMock.Setup(r => r.GetAllTasksAsync()).ReturnsAsync(tasks);
         var cmd = new CheckCommand(_repoMock.Object, _consoleMock.Object);
         var result = await cmd.ExecuteAsync(new string[0]);
-        Assert.Contains("00:30:00", result);
+        Assert.Contains("[00:30:00]", result);
     }
 
     [Fact]
@@ -77,12 +77,12 @@ public class CheckCommandTests
     {
         var tasks = new List<TaskModel>
         {
-            new() { Id = Guid.NewGuid(), Description = "Task 1 - Lunch break", Status = TaskStatus.Paused, PauseReason = "Lunch break" }
+            new() { Id = Guid.NewGuid(), Description = "Task 1", Status = TaskStatus.Paused, PauseReason = "Lunch break" }
         };
         _repoMock.Setup(r => r.GetAllTasksAsync()).ReturnsAsync(tasks);
         var cmd = new CheckCommand(_repoMock.Object, _consoleMock.Object);
         var result = await cmd.ExecuteAsync(new string[0]);
-        Assert.Contains("Lunch break", result);
+        Assert.Contains("- Lunch break", result);
     }
 
     [Fact]

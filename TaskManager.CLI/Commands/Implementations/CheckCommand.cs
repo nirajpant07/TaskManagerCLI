@@ -27,16 +27,12 @@ namespace TaskManager.CLI.Commands.Implementations
 
             if (!activeTasks.Any())
             {
-                var msg = "📋 No active tasks found.\n💡 Add tasks with '!task <description>' to get started!";
-                return msg;
+                return "📋 No active tasks found.\n💡 Add tasks with '!task <description>' to get started!";
             }
 
             // Assign aliases and update alias manager
             var orderedTasks = activeTasks.OrderBy(t => t.CreatedAt).ToList();
             TaskAliasManager.SetAliases(orderedTasks.Select(t => t.Id).ToList());
-
-            var sb = new System.Text.StringBuilder();
-            sb.AppendLine($"📋 Your Tasks ({orderedTasks.Count} active)");
 
             // Prepare table data
             var headers = new[] { "Alias", "Description", "Status", "Focused", "Focus Time", "GUID" };
@@ -65,34 +61,21 @@ namespace TaskManager.CLI.Commands.Implementations
                 };
             }
 
-            // Output table to string
-            sb.AppendLine(string.Join("  ", headers));
-            sb.AppendLine(new string('-', 90));
-            foreach (var row in rows)
-            {
-                sb.AppendLine(string.Join("  ", row));
-            }
-            sb.AppendLine();
-            sb.AppendLine("💡 Use '!focus next' to start working or '!focus next <alias>' for a specific task");
+            // Output table
+            _console.WriteHeader($"📋 Your Tasks ({orderedTasks.Count} active)");
+            _console.WriteTable(headers, rows);
+            _console.WriteLine();
+            _console.WriteInfo("💡 Use '!focus next' to start working or '!focus next <alias>' for a specific task");
 
             // Add summary by status
             var statusGroups = orderedTasks.GroupBy(t => t.Status)
                 .Select(g => $"{g.Key}: {g.Count()}")
                 .ToList();
-            sb.AppendLine();
-            sb.AppendLine("Summary by Status:");
-            sb.AppendLine(string.Join(" | ", statusGroups));
-
-            // Also write to console for CLI
-            _console.WriteHeader($"📋 Your Tasks ({orderedTasks.Count} active)");
-            _console.WriteTable(headers, rows);
-            _console.WriteLine();
-            _console.WriteInfo("💡 Use '!focus next' to start working or '!focus next <alias>' for a specific task");
             _console.WriteLine();
             _console.WriteHighlight("Summary by Status:");
             _console.WriteLine(string.Join(" | ", statusGroups));
 
-            return sb.ToString().TrimEnd();
+            return string.Empty;
         }
     }
 }
