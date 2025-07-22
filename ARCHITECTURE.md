@@ -9,6 +9,7 @@ graph TB
     subgraph "Presentation Layer"
         CLI[Console Interface]
         UI[Windows Forms Notifications]
+        POPUP[WindowsPopupHelper\n(Exit Popups)]
     end
 
     subgraph "Application Layer"
@@ -78,6 +79,7 @@ graph TB
     %% Presentation Layer Connections
     CLI --> TM
     UI --> WNS
+    POPUP --> TM
 
     %% Application Layer Connections
     TM --> CF
@@ -176,7 +178,7 @@ graph TB
     classDef infrastructureLayer fill:#F4F1BB,stroke:#000000,stroke-width:2px,color:#000000
     classDef dataLayer fill:#E6EBE0,stroke:#000000,stroke-width:2px,color:#000000
 
-    class CLI,UI presentationLayer
+    class CLI,UI,POPUP presentationLayer
     class TM,CF,AT,FC,BC,DC,EC,DN,PC,TC,CC,CL,CD,SD,ED,WD,UP,ST,HC,RC applicationLayer
     class FSM,WDM,TS,BS,WNS,WSS,HRG,IFSM,IWDM,ITS,INOT,ISND domainLayer
     class ETR,ITR,CH infrastructureLayer
@@ -188,6 +190,7 @@ graph TB
 ### 1. **Presentation Layer**
 - **Console Interface**: Main CLI interaction point
 - **Windows Forms**: Notifications and alerts
+- **WindowsPopupHelper**: Handles exit popups for workday management and goodbye messages
 
 ### 2. **Application Layer**
 - **TaskManagerService**: Main orchestrator and application entry point
@@ -212,6 +215,7 @@ sequenceDiagram
     participant User
     participant CLI as Console Interface
     participant TM as TaskManagerService
+    participant POPUP as WindowsPopupHelper
     participant CF as CommandFactory
     participant CMD as Command
     participant SVC as Service
@@ -232,6 +236,15 @@ sequenceDiagram
     CMD-->>TM: Success message
     TM-->>CLI: Display result
     CLI-->>User: "✅ Task 1 added: New task"
+    User->>CLI: Exit app (!exit or Ctrl+C)
+    CLI->>POPUP: Show exit popup (end workday?)
+    alt User chooses Yes
+        POPUP->>TM: End workday, handle active tasks
+        TM->>REPO: Update tasks, end workday
+        POPUP->>User: Show goodbye popup (auto-close)
+    else User chooses No
+        POPUP->>User: Show goodbye popup (auto-close)
+    end
 ```
 
 ## 🎯 Command Pattern Implementation
@@ -617,6 +630,8 @@ graph TB
 - Comprehensive error handling
 - Automatic backup system
 - Graceful degradation for failures
+- **User-friendly exit workflow**: Ensures users are prompted to end their workday and handle active tasks, reducing data loss and improving workflow continuity
+- **Note:** The goodbye popup is only reliably shown on `!exit` or Ctrl+C, not when closing the console window with the X button due to OS limitations
 
 ## 📊 HTML Report Generator & Tooltip System
 

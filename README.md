@@ -107,6 +107,12 @@ TaskManagerCLI.exe "!focus next 1"
 TaskManagerCLI.exe "!stats"
 ```
 
+### Exit Workflow (Windows Popup)
+- When you exit the app (using `!exit` or Ctrl+C), a Windows popup will ask if you want to end your workday.
+- If you choose **Yes**, you will be prompted for each active task to complete, pause for next day, or skip.
+- If you choose **No**, a goodbye popup will appear and auto-close after 5 seconds.
+- **Note:** Due to Windows limitations, the goodbye popup is only reliably shown on `!exit` or Ctrl+C, not when closing the console window with the X button.
+
 ## 📖 Available Commands
 
 ### 🔨 Task Management
@@ -279,9 +285,10 @@ TaskManagerCLI/
    !stats
    ```
 
-6. **End your work day**:
+6. **End your work day or exit the app**:
    ```
    !endday
+   # or simply type !exit and follow the popup instructions
    ```
 
 7. **Generate productivity report**:
@@ -390,6 +397,7 @@ Backups are stored with timestamps for easy recovery.
 1. **Excel file locked**: Close any open Excel files before running the application
 2. **Notifications not working**: Ensure Windows notifications are enabled
 3. **Sound not playing**: Check system volume and audio settings
+4. **Goodbye popup not shown on X button**: The goodbye popup is only reliably shown when exiting with `!exit` or Ctrl+C. When closing the console window with the X button, Windows may terminate the process before the popup can display.
 
 ### Error Handling
 
